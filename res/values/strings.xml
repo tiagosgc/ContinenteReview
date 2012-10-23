@@ -1,0 +1,24 @@
+<resources>
+
+    <string name="app_name">Continente Review</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_development">Development Tools</string>
+    <string name="menu_clearDB">Clear DB</string>
+    <string name="menu_createTestData">Create Test Data</string>
+    <string name="topTextString">Continente Review</string>
+    <string name="iconDesc">Logotipo da aplicação</string>
+    <string name="reviewHistoryLabel">Ver histórico de reviews (já funciona)</string>
+    <string name="searchProductLabel">Procurar em lista de artigos</string>
+    <string name="insertEANLabel">Inserir código de barras</string>
+    <string name="startScannerLabel">Ler Código de barras com a câmara</string>
+    <string name="reviewLabel">Iniciar novo Review</string>
+    <string name="title_activity_main_menu">Continente Review</string>
+    <string name="title_activity_full_image">Full Image </string>
+    <string name="title_activity_development_tools">DevelopmentTools</string>
+    <string name="title_activity_review_list">Reviews</string>
+    <string name="title_activity_photos_management">Photos Management</string>
+    <string name="button_reviewPhotos">Fotos</string>
+    <string name="button_reviewComment">Comentário</string>
+
+</resources>
