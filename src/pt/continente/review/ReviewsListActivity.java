@@ -5,7 +5,7 @@ import java.util.List;
 import pt.continente.review.common.Article;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.Review;
-import pt.continente.review.getpictures.PhotosManagementActivity;
+import pt.continente.review.common.ReviewActivity;
 import pt.continente.review.tables.ArticlesTable;
 import pt.continente.review.tables.ReviewsTable;
 import pt.continente.review.tables.SQLiteHelper;
@@ -163,7 +163,7 @@ public class ReviewsListActivity extends Activity {
 	}
 	
 	private void launchReview(long id) {
-    	Intent intent = new Intent(this, PhotosManagementActivity.class);
+    	Intent intent = new Intent(this, ReviewActivity.class);
     	intent.putExtra("revId", id);
     	startActivity(intent);
 	}
