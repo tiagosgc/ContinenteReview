@@ -83,6 +83,10 @@ public class PhotosManagementActivity extends Activity {
 		}
         Common.log(5, TAG, "onResume: will update the view");
         updateView();
+        if(revImgs.size() == 0) {
+            Common.log(5, TAG, "onResume: since there are no photos for this review, will atempt to open camera immediately");
+        	adicionaNova(null);
+        }
         super.onResume();
 	}
 

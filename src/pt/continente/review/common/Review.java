@@ -48,7 +48,7 @@ public class Review {
 		return rev_comment;
 	}
 
-	private void setComment(String rev_comment) {
+	public void setComment(String rev_comment) {
 		this.rev_comment = rev_comment;
 	}
 	

@@ -12,6 +12,8 @@ import pt.continente.review.tables.ReviewDimensionsTable;
 import pt.continente.review.tables.ReviewsTable;
 import pt.continente.review.tables.SQLiteHelper;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,6 +21,7 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -30,9 +33,6 @@ public class ReviewActivity extends Activity {
 	private Article article = null; 
 	private Review review = null; 
 	private List<Dimension> dimensions = null;
-	private long revId = -1; 
-	Bitmap productBitmap = null;
-	URL url = null;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -40,36 +40,43 @@ public class ReviewActivity extends Activity {
 		Common.log(5, TAG, "onCreate: started");
 		setContentView(R.layout.activity_review);
 		
-		TextView t = (TextView) findViewById(R.id.articleName);
-
-		revId = (long) getIntent().getLongExtra("revId", -1);
+		long revId = (long) getIntent().getLongExtra("revId", -1);
 		article = (Article) getIntent().getSerializableExtra("Article");
 		if (revId != -1) {
-			int result = getDataFromRevId();
+			Common.log(5, TAG, "onCreate: will create recover existing review");
+			int result = getDataFromRevId(revId);
 			if (result < 0) {
+				Common.log(1, TAG, "onCreate: ERROR getting information from DB; cannot continue (revId = '" + revId + "'");
 				Toast.makeText(this, "Error getting information from DB; cannot continue", Toast.LENGTH_LONG).show();
 			}
 		} else if (article != null) {
-			t.setText(article.getName());
-			Common.log(5, TAG, "onCreate: will add review");
+			Common.log(5, TAG, "onCreate: will create new review");
 			if(!addNewReview()) {
 				Common.log(1, TAG, "onCreate: ERROR adding data to tables (result was '" + revId + "'");
 			}
-			Common.log(5, TAG, "onCreate: will set bitmap");
-			if (productBitmap == null) {
-				try {
-					ImageView i = (ImageView) findViewById(R.id.articleIcon);
-					url = new URL(HTTPGateway.imagePrefix + article.getImageURL());
-					InputStream is = (InputStream) url.getContent();
-					productBitmap = BitmapFactory.decodeStream(is);
-					i.setImageBitmap(productBitmap);
-
-				} catch (Exception e) {
-					Common.log(1, TAG, "onCreate: Erro no carregamento da imagem do artigo no link " + HTTPGateway.imagePrefix + article.getImageURL() + "\nErro e:" + e.getMessage());
-				}
-			}
 		} else {
 			Common.log(1, TAG, "onCreate: ERROR activity started with unexpected inputs");
+		}
+		
+		Common.log(5, TAG, "onCreate: will set text info in activity");
+		TextView t = (TextView) findViewById(R.id.articleName);
+		t.setText(article.getName());
+
+		Common.log(5, TAG, "onCreate: will set bitmap");
+		Bitmap productBitmap = article.getImage();
+		if(productBitmap == null) {
+			Common.log(3, TAG, "onCreate: article object did not contain image; will attempt to get from URL");
+			try {
+				URL url = new URL(HTTPGateway.imagePrefix + article.getImageURL());
+				InputStream is = (InputStream) url.getContent();
+				productBitmap = BitmapFactory.decodeStream(is);
+			} catch (Exception e) {
+				Common.log(1, TAG, "onCreate: Erro no carregamento da imagem do artigo no link " + HTTPGateway.imagePrefix + article.getImageURL() + "\nErro e:" + e.getMessage());
+			}
+		}
+		if(productBitmap == null) {
+			ImageView i = (ImageView) findViewById(R.id.articleIcon);
+			i.setImageBitmap(productBitmap);
 		}
 		
 		Common.log(5, TAG, "onCreate: will draw dimensions");
@@ -83,7 +90,7 @@ public class ReviewActivity extends Activity {
 		return true;
 	}
 	
-	private int getDataFromRevId() {
+	private int getDataFromRevId(long revId) {
 		Common.log(5, TAG, "getDataFromRevId: started");
     	SQLiteHelper dbHelper = new SQLiteHelper(this);
     	
@@ -203,23 +210,22 @@ public class ReviewActivity extends Activity {
 			Common.log(1, TAG, "addNewReview: could not open the table - " + e.getMessage());
 			return false;
 		}
-    	long revTmpId;
+    	long revTmpId = -1;
     	revTmpId = revTab.findItem(article.getId());
     	if (revTmpId > 0) {
 			Common.log(5, TAG, "addNewReview: review already exists, will recover");
-			revId = revTmpId;
-			review = revTab.getItem(revId);
+			review = revTab.getItem(revTmpId);
     	} else {
 			Common.log(5, TAG, "addNewReview: review is new - will add");
 	    	Review revTmp;
 	    	revTmp = new Review(-1, Common.revStates.WORK_IN_PROGRESS, article.getId(), null);
-	    	revId = revTab.addItem(revTmp);
+	    	revTmpId = revTab.addItem(revTmp);
 	        Common.log(3, TAG, "addNewReview: created new review with ID '" + revTmpId + "'");
 	        
     	}
     	revTab.close();
 		Common.log(5, TAG, "addNewReview: will exit");
-    	if (revId < 0)
+    	if (revTmpId < 0)
     		return false;
     	else
     		return true;
@@ -278,11 +284,39 @@ public class ReviewActivity extends Activity {
 	
 	public void reviewPhotos(View view) {
     	Intent intent = new Intent(this, PhotosManagementActivity.class);
-    	intent.putExtra("revId", revId);
+    	intent.putExtra("revId", review.getId());
     	startActivity(intent);
 	}
 
 	public void reviewComment(View view) {
-		Toast.makeText(this, "Review management not yet implemented", Toast.LENGTH_SHORT).show();
+		Common.log(5, TAG, "reviewComment: started");
+		AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+		alert.setTitle(R.string.label_reviewCommentTitle);
+		alert.setMessage(R.string.label_reviewCommentMessage);
+
+		final EditText input = new EditText(this);
+		if (review.getComment() != null)
+			input.setText(review.getComment());
+		alert.setView(input);
+
+		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int whichButton) {
+					String value = input.getText().toString();
+					Common.log(5, TAG, "reviewComment: capturou o input '" + value + "'");
+					review.setComment(value);
+				}
+			}
+		);
+
+		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int whichButton) {
+				// Canceled.
+				}
+			}
+		);
+
+		alert.show();
+		Common.log(5, TAG, "reviewComment: will exit");
 	}
 }
