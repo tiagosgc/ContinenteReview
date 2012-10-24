@@ -16,6 +16,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ImageView;
@@ -166,6 +167,15 @@ public class ReviewActivity extends Activity {
 
     	SQLiteHelper dbHelper = new SQLiteHelper(this);
     	
+    	List<Dimension> newRevDims = new HTTPGateway().getDimensions(article.getId());
+    	
+    	if(newRevDims == null) {
+    		Common.log(1, TAG, "addNewReview: could not retrieve dimensions from Host");
+    		return false;
+    	}
+		Common.log(5, TAG, "addNewReview: retrieved '" + newRevDims.size() + "' dimensions for Article with Id '" + article.getId() + "'");
+    	dimensions = newRevDims;
+		
     	/*
     	 *  Add Article to Table
     	 */
@@ -229,12 +239,38 @@ public class ReviewActivity extends Activity {
 			
 			TextView newLabel = new TextView(this);
 			newLabel.setText(dim.getLabel());
-			newLinLay.addView(newLabel);
 			
 			SeekBar newBar = new SeekBar(this);
 			newBar.setId((int)dim.getId());
-			newBar.setIndeterminate(true);
+			newBar.setMax(100);
 			
+			LinearLayout newLinLayClass = new LinearLayout(this);
+			newLinLayClass.setOrientation(LinearLayout.HORIZONTAL);
+			
+			TextView newMin = new TextView(this);
+			newMin.setText(dim.getMin());
+			newMin.setGravity(Gravity.LEFT);
+			newLinLayClass.addView(newMin);
+			
+			//TODO definir weight dos textviews como 1
+			
+			TextView newMed = new TextView(this);
+			if(dim.getMed() != null && dim.getMed() != "")
+				newMed.setText(dim.getMed());
+			else
+				newMed.setText("");
+			newMed.setGravity(Gravity.CENTER_HORIZONTAL);
+			newLinLayClass.addView(newMed);
+			
+			TextView newMax = new TextView(this);
+			newMax.setText(dim.getMax());
+			newMax.setGravity(Gravity.RIGHT);
+			newLinLayClass.addView(newMax);
+			
+
+			newLinLay.addView(newLabel);
+			newLinLay.addView(newBar);
+			newLinLay.addView(newLinLayClass);
 			
 			linLay.addView(newLinLay);
 		}

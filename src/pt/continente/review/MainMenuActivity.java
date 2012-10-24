@@ -123,6 +123,9 @@ public class MainMenuActivity extends Activity {
 	    		Common.log(5, TAG, "onOptionsItemSelected: create test dimensions");
 	        	criarDimensionsTeste();
 	        	return true;
+	        case R.id.menu_getSampleDimensions:
+	        	httpGateway.getDimensions(71);
+	        	return true;
 	        default:
 	            return super.onOptionsItemSelected(item);
 	    }
