@@ -152,16 +152,16 @@ public class HTTPGateway {
 				if (proxNode.getNodeName().compareTo("name") == 0) {
 					name = proxNode.getTextContent();
 				}
-				if (proxNode.getNodeName().compareTo("label") == 0) {
+				if (proxNode.getNodeName().compareTo("labelDimension") == 0) {
 					label = proxNode.getTextContent();
 				}
-				if (proxNode.getNodeName().compareTo("min") == 0) {
+				if (proxNode.getNodeName().compareTo("labelMin") == 0) {
 					min = proxNode.getTextContent();
 				}
-				if (proxNode.getNodeName().compareTo("med") == 0) {
+				if (proxNode.getNodeName().compareTo("labelMed") == 0) {
 					med = proxNode.getTextContent();
 				}
-				if (proxNode.getNodeName().compareTo("max") == 0) {
+				if (proxNode.getNodeName().compareTo("labelMax") == 0) {
 					max = proxNode.getTextContent();
 				}
 			}
