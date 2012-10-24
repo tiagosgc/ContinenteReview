@@ -16,9 +16,10 @@
     <string name="title_activity_main_menu">Continente Review</string>
     <string name="title_activity_full_image">Full Image </string>
     <string name="title_activity_development_tools">DevelopmentTools</string>
-    <string name="title_activity_review_list">Reviews</string>
+    <string name="title_activity_review_list">Reviews</string> 
     <string name="title_activity_photos_management">Photos Management</string>
     <string name="button_reviewPhotos">Fotos</string>
     <string name="button_reviewComment">Comentário</string>
+    <string name="menu_getSampleDimensions">getDimensions com 71</string>
 
 </resources>

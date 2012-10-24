@@ -11,4 +11,7 @@
     <item android:id="@+id/menu_createTestData"
         android:title="@string/menu_createTestData"
         android:orderInCategory="130" />
+    <item android:id="@+id/menu_getSampleDimensions"
+        android:title="@string/menu_getSampleDimensions"
+        android:orderInCategory="130" />
 </menu>
