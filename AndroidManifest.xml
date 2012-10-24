@@ -21,7 +21,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".common.ArticleActivity" />
         <activity
             android:name=".DevelopmentTools"
             android:label="@string/title_activity_development_tools" >
@@ -29,6 +28,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="pt.continente.review.MainMenuActivity" />
         </activity>
+        <activity android:name=".common.ArticleActivity" />
+        <activity android:name=".common.ReviewActivity" />
         <activity
             android:name=".ReviewsListActivity"
             android:label="@string/title_activity_review_list" >

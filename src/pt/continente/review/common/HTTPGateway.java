@@ -17,7 +17,7 @@ import org.w3c.dom.NodeList;
 
 public class HTTPGateway {
 	private static final String TAG = "CntRev - HTTPGATEWAY";
-	static String serverIP = "10.120.254.24";
+	static String serverIP = "172.16.0.185";
 	static String imagePrefix = "http://www.continente.pt/Images/media/Products/";
 
 	public Article getProduct(String ean) {
@@ -31,8 +31,7 @@ public class HTTPGateway {
 		try {
 			HttpClient httpClient = new DefaultHttpClient();
 			HttpContext localContext = new BasicHttpContext();
-			HttpGet httpGet = new HttpGet("http://" + HTTPGateway.serverIP
-					+ "/ContinenteReview/produto.php?ean=" + ean);
+			HttpGet httpGet = new HttpGet("http://" + HTTPGateway.serverIP + "/ContinenteReview/article.php?ean=" + ean);
 
 			HttpResponse response = httpClient.execute(httpGet, localContext);
 			HttpEntity entity = response.getEntity();

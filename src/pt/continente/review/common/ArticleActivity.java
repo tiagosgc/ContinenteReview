@@ -23,6 +23,7 @@ public class ArticleActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		Common.log(5, TAG, "onCreate: started");
 		setContentView(R.layout.activity_article);
 		
 		TextView t = (TextView) findViewById(R.id.articleName);
@@ -52,7 +53,7 @@ public class ArticleActivity extends Activity {
 		return true;
 	}
 	
-	public void reviewArticle(View view)
+	public void startReview(View view)
 	{
 		Intent intent = new Intent(this, ReviewActivity.class);
 		intent.putExtra("Article", article);
