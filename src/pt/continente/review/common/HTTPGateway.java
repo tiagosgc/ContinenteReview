@@ -21,7 +21,7 @@ import org.w3c.dom.NodeList;
 
 public class HTTPGateway {
 	private static final String TAG = "CntRev - HTTPGATEWAY";
-	static String serverIP = "172.16.0.185";
+	static String serverIP = "195.170.168.33";
 	static String imagePrefix = "http://www.continente.pt/Images/media/Products/";
 
 	public Document getXMLDocument(String url) {
