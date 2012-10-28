@@ -7,6 +7,7 @@ import pt.continente.review.common.ArticleActivity;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.Dimension;
 import pt.continente.review.common.HTTPGateway;
+import pt.continente.review.common.HTTPRequest;
 import pt.continente.review.common.IntentIntegrator;
 import pt.continente.review.common.IntentResult;
 import pt.continente.review.common.Review;
@@ -18,9 +19,11 @@ import pt.continente.review.tables.ReviewsTable;
 import pt.continente.review.tables.SQLiteHelper;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,8 +32,10 @@ import android.widget.Toast;
 
 public class MainMenuActivity extends Activity { 
 
-	private static final String TAG = "CntRev - Main Menu";
-	private static HTTPGateway httpGateway;
+	private static final String TAG = "CntRev - MainMenuActivity";
+	private HTTPGateway httpGateway;
+	private static ProgressDialog dialog;
+	private static Article scannedArticle;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -150,7 +155,20 @@ public class MainMenuActivity extends Activity {
 	}
 
 	public void launchArticleFromEAN(String ean) {
-		Article scannedArticle = httpGateway.getProduct(ean);
+		Common.log(5, TAG, "launchArticleFromEAN: started");
+		
+		String url = "http://" + Common.httpVariables.SERVER_IP + "/ContinenteReview/article.php?ean=" + ean;
+		
+		Common.log(5, TAG, "launchArticleFromEAN: will atempt to launch service to get content from url '" + url + "'");
+		
+		HTTPRequest myHttpThread = new HTTPRequest(httpThreadHandler, url);
+		myHttpThread.start();
+		dialog = ProgressDialog.show(this, "A ober informação", "a consultar...");
+		
+		Common.log(5, TAG, "launchArticleFromEAN: finished");
+	}
+	
+	private void launchArticleActivity() {
 		
 		if (scannedArticle != null) {
 			Common.log(3, TAG, "Vou arrancar um novo article activity");
@@ -160,7 +178,8 @@ public class MainMenuActivity extends Activity {
 			startActivity(intent);
 			Common.log(3, TAG, "Arranquei a Activity Article Activity");
 		} else {
-			Toast.makeText(this, "'" + ean + "' não é um EAN válido", Toast.LENGTH_LONG).show();
+			Common.log(5, TAG, "launchArticleFromEAN: null article received");
+			//Toast.makeText(this, "Não foi possível obter informação sobre o artigo com ean '" + ean + "'", Toast.LENGTH_LONG).show();
 		}
 	}
 
@@ -309,4 +328,23 @@ public class MainMenuActivity extends Activity {
     	dimTab.close();
     	revDimTab.close();
     }
+
+	public Handler httpThreadHandler = new Handler() {
+        public void handleMessage(android.os.Message msg) {
+        	String responseStr = "ORIGINAL STATE";
+        	switch (msg.what) {
+        	case Common.httpVariables.SUCCESS_FALSE:
+        		responseStr = "Retorno SEM resultado";
+        		break;
+        	case Common.httpVariables.SUCCESS_TRUE:
+        		responseStr = "Retorno COM resultado"; 
+        		scannedArticle = (Article) msg.getData().getSerializable("response");
+        		break;
+        	}
+        	if(dialog != null && dialog.isShowing())
+        		dialog.dismiss();
+        	launchArticleActivity();
+        };
+    };
+
 }

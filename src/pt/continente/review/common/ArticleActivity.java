@@ -35,13 +35,13 @@ public class ArticleActivity extends Activity {
 			try {
 				ImageView i = (ImageView) findViewById(R.id.articleIcon);
 				
-				url = new URL(HTTPGateway.imagePrefix + article.getImageURL());
+				url = new URL(Common.httpVariables.IMAGE_PREFIX + article.getImageURL());
 				InputStream is = (InputStream) url.getContent();
 				productBitmap = BitmapFactory.decodeStream(is);
 				i.setImageBitmap(productBitmap);
 
 			} catch (Exception e) {
-				Common.log(1, TAG, "Erro no carregamento da imagem do artigo no link " + HTTPGateway.imagePrefix + article.getImageURL() + "\nErro e:" + e.getMessage());
+				Common.log(1, TAG, "Erro no carregamento da imagem do artigo no link " + Common.httpVariables.IMAGE_PREFIX + article.getImageURL() + "\nErro e:" + e.getMessage());
 			}
 		}
 

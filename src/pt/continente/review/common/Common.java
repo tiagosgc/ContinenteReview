@@ -3,9 +3,12 @@ package pt.continente.review.common;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
+import android.util.TypedValue;
+import android.widget.Toast;
 
 public class Common {
 	//private static final String TAG = "CntRev - Common";
@@ -19,13 +22,24 @@ public class Common {
 		public static final int SUBMITED = 15;
 	}
 	
-	public Common() {
-		// TODO Auto-generated constructor stub
+	public static final class httpVariables {
+		public final static String SERVER_IP = "195.170.168.33";
+		public final static String IMAGE_PREFIX = "http://www.continente.pt/Images/media/Products/";
+		public final static int SUCCESS_TRUE = 11;
+		public final static int SUCCESS_FALSE = 12;
 	}
-
+	
 	public static void log(int debugLevel, String tag, String msg) {
 		if (debugLevel <= LOG_LEVEL)
 			Log.i(tag, msg);
+	}
+
+	public static void shortToast(Context c, String msg) {
+		Toast.makeText(c, msg, Toast.LENGTH_SHORT).show();
+	}
+	
+	public static int pixelsFromDPs(Context c, int DPs) {
+	    return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DPs, c.getResources().getDisplayMetrics());
 	}
 
 	public static byte[] imageToBlob(Bitmap image) {

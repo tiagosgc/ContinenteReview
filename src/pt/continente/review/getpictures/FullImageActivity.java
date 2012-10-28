@@ -35,10 +35,16 @@ public class FullImageActivity extends Activity {
     	voltarAtividadeAnterior(RESULT_OK);
     }
     
-    private void voltarAtividadeAnterior(int resultado) {
+    @Override
+	public void onBackPressed() {
+    	voltarAtividadeAnterior(RESULT_OK);
+	}
+
+	private void voltarAtividadeAnterior(int resultado) {
     	Intent returnIntent = new Intent();
     	returnIntent.putExtra("imgId", imgId);
     	setResult(resultado, returnIntent);        
     	finish();
     }
+    
 }

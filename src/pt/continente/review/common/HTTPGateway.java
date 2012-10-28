@@ -9,58 +9,58 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import android.os.Handler;
+
 public class HTTPGateway {
 	private static final String TAG = "CntRev - HTTPGATEWAY";
-	static String serverIP = "195.170.168.33";
-	static String imagePrefix = "http://www.continente.pt/Images/media/Products/";
-
+	
+	
 	public Document getXMLDocument(String url) {
 		Common.log(5, TAG, "getXMLDocument: Inicio de get da string:" + url);
-		DocumentBuilder builder;
-		Document document;
+		
+		DocumentBuilder builder = null;
+		Document newDocument = null;
+		HttpResponse response = null;
+		
 		try {
-			HttpClient httpClient = new DefaultHttpClient();
-			HttpContext localContext = new BasicHttpContext();
-			HttpGet httpGet = new HttpGet(url);
-
-			HttpResponse response = httpClient.execute(httpGet, localContext);
 			HttpEntity entity = response.getEntity();
 			InputStream instream = entity.getContent();
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			dbf.setIgnoringElementContentWhitespace(true);
 			builder = dbf.newDocumentBuilder();
-			document = builder.parse(instream);
-			return document;
+			newDocument = builder.parse(instream);
 		} catch (Exception e) {
-			Common.log(3, TAG, "Erro na ligação a \"" +url + e);
-			e.printStackTrace();
+			Common.log(3, TAG, "Erro no processamento do retorno - " + e.getMessage());
 			return null;
 		}
-
+		return newDocument;
 	}
-
+	
 	public Article getProduct(String ean) {
 		Common.log(5, TAG, "Inicio de getProduct com ean=" + ean);
 
-		Document document = getXMLDocument("http://" + HTTPGateway.serverIP
-				+ "/ContinenteReview/article.php?ean=" + ean);
+		Document document = getXMLDocument("http://" + Common.httpVariables.SERVER_IP + "/ContinenteReview/article.php?ean=" + ean);
+		return getProductFromDoc(document);
+	}
+
+	public static Article getProductFromDoc(Document document) {
+
+		if (document == null) {
+			return null;
+		}
+		
 		Element root;
 		NodeList nodeList;
 
 		document.getDocumentElement().normalize();
 		root = document.getDocumentElement();
 		nodeList = root.getChildNodes();
-
+		
 		Node proxNode;
 		String id = "-1";
 		String name = "";
@@ -112,17 +112,19 @@ public class HTTPGateway {
 				Integer.parseInt(prodStructL4));
 		Common.log(3, TAG, "" + gettedArticle);
 		return gettedArticle;
-
-		// Log.d("Tiago", "resposta:" + result);
-
 	}
 
 	public List<Dimension> getDimensions(long articleId) {
 		Common.log(5, TAG, "getDimensions: Inicio com article_id = "
 				+ articleId);
 
-		Document document = getXMLDocument("http://" + HTTPGateway.serverIP
+		Document document = getXMLDocument("http://" + Common.httpVariables.SERVER_IP
 				+ "/ContinenteReview/dimensions.php?article_id=" + articleId);
+
+		if (document == null) {
+			return null;
+		}
+		
 		Element root;
 		NodeList dimensions;
 		NodeList dimensionNodes;
@@ -174,4 +176,50 @@ public class HTTPGateway {
 
 	}
 
+//	private class httpGetTask extends AsyncTask<String, Integer, List<HttpResponse>> {
+//		HttpContext localContext;
+//		List<HttpResponse> results;
+//		
+//		@Override
+//		protected void onPreExecute() {
+//			try {
+//				localContext = new BasicHttpContext();
+//    			results = new ArrayList<HttpResponse>();
+//			} catch (Exception e) {
+//				Common.log(3, TAG, "httpGetTask: onPreExecute: error initiating variables");
+//			}
+//			super.onPreExecute();
+//		}
+//
+//		protected List<HttpResponse> doInBackground(String... urls) {
+//			for (String url : urls) {
+//				DefaultHttpClient client = new DefaultHttpClient();
+//				HttpGet httpGet = new HttpGet(url);
+//				HttpResponse response = null;
+//	    		try {
+//	    			response = client.execute(httpGet, localContext);
+//	    		} catch (ClientProtocolException e) {
+//	    			Common.log(3, TAG, "httpGetTask: doInBackground: Erro ao obter informação da internet (ClientProtocolException) - " + e.getMessage());
+//	    		} catch (IOException e) {
+//	    			Common.log(3, TAG, "httpGetTask: doInBackground: Erro ao obter informação da internet (IOException) - " + e.getMessage());
+//	    		} catch (Exception e) {
+//	    			Common.log(3, TAG, "httpGetTask: doInBackground: Erro ao obter informação da internet (UndefinedException) - " + e.getMessage());
+//	    			e.printStackTrace();
+//	    		}
+//	    		if(response != null)
+//	    			results.add(response);
+//	    		//publishProgress((int) ((i / (float) count) * 100));
+//	    		if (isCancelled()) break; // Escape early if cancel() is called
+//			}
+//			return results;
+//		}
+//
+//		protected void onProgressUpdate(Integer... progress) {
+//			//setProgressPercent(progress[0]);
+//		}
+//
+//		protected void onPostExecute(List<HttpResponse> result) {
+//			responses = results;
+//		}
+//	}
 }

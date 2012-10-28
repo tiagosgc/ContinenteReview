@@ -67,11 +67,11 @@ public class ReviewActivity extends Activity {
 		if(productBitmap == null) {
 			Common.log(3, TAG, "onCreate: article object did not contain image; will attempt to get from URL");
 			try {
-				URL url = new URL(HTTPGateway.imagePrefix + article.getImageURL());
+				URL url = new URL(Common.httpVariables.IMAGE_PREFIX + article.getImageURL());
 				InputStream is = (InputStream) url.getContent();
 				productBitmap = BitmapFactory.decodeStream(is);
 			} catch (Exception e) {
-				Common.log(1, TAG, "onCreate: Erro no carregamento da imagem do artigo no link " + HTTPGateway.imagePrefix + article.getImageURL() + "\nErro e:" + e.getMessage());
+				Common.log(1, TAG, "onCreate: Erro no carregamento da imagem do artigo no link " + Common.httpVariables.IMAGE_PREFIX + article.getImageURL() + "\nErro e:" + e.getMessage());
 			}
 		}
 		if(productBitmap == null) {

@@ -8,7 +8,7 @@
     <string name="menu_createTestData">Create Test Data</string>
     <string name="topTextString">Continente Review</string>
     <string name="iconDesc">Logotipo da aplicação</string>
-    <string name="reviewHistoryLabel">Ver histórico de reviews (já funciona)</string>
+    <string name="reviewHistoryLabel">Ver histórico de reviews</string>
     <string name="searchProductLabel">Procurar em lista de artigos</string>
     <string name="insertEANLabel">Inserir código de barras</string>
     <string name="startScannerLabel">Ler Código de barras com a câmara</string>
