@@ -53,9 +53,9 @@ public class HTTPRequest extends Thread {
 		Common.log(5, TAG, "run: started");
 
 		// simulates delay in fetch
-		boolean simulateDealy = true;
+		boolean simulateDelay = true;
 		try {
-			Thread.sleep(simulateDealy ? 2000 : 1);
+			Thread.sleep(simulateDelay ? 2000 : 1);
         } catch (InterruptedException e) {
         	e.printStackTrace();
         }
