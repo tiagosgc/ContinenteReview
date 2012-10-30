@@ -6,7 +6,6 @@ import pt.continente.review.common.Article;
 import pt.continente.review.common.ArticleActivity;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.Dimension;
-import pt.continente.review.common.HTTPGateway;
 import pt.continente.review.common.HTTPRequest;
 import pt.continente.review.common.IntentIntegrator;
 import pt.continente.review.common.IntentResult;
@@ -33,15 +32,14 @@ import android.widget.Toast;
 public class MainMenuActivity extends Activity { 
 
 	private static final String TAG = "CntRev - MainMenuActivity";
-	private HTTPGateway httpGateway;
 	private static ProgressDialog dialog;
 	private static Article scannedArticle;
+	private String responseStr = "ORIGINAL STATE";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main_menu);
-		httpGateway = new HTTPGateway();
 	}
 
 	@Override
@@ -129,7 +127,7 @@ public class MainMenuActivity extends Activity {
 	        	criarDimensionsTeste();
 	        	return true;
 	        case R.id.menu_getSampleDimensions:
-	        	httpGateway.getDimensions(71);
+	        	Common.shortToast(this, "Not implemented");
 	        	return true;
 	        default:
 	            return super.onOptionsItemSelected(item);
@@ -156,12 +154,12 @@ public class MainMenuActivity extends Activity {
 
 	public void launchArticleFromEAN(String ean) {
 		Common.log(5, TAG, "launchArticleFromEAN: started");
-		
+
 		String url = "http://" + Common.httpVariables.SERVER_IP + "/ContinenteReview/article.php?ean=" + ean;
-		
 		Common.log(5, TAG, "launchArticleFromEAN: will atempt to launch service to get content from url '" + url + "'");
 		
-		HTTPRequest myHttpThread = new HTTPRequest(httpThreadHandler, url);
+		scannedArticle = null;
+		HTTPRequest myHttpThread = new HTTPRequest(httpThreadHandler, url, HTTPRequest.requestTypes.GET_ARTICLE);
 		myHttpThread.start();
 		dialog = ProgressDialog.show(this, "A ober informação", "a consultar...");
 		
@@ -169,7 +167,6 @@ public class MainMenuActivity extends Activity {
 	}
 	
 	private void launchArticleActivity() {
-		
 		if (scannedArticle != null) {
 			Common.log(3, TAG, "Vou arrancar um novo article activity");
 			Intent intent = new Intent(this, ArticleActivity.class);
@@ -179,7 +176,7 @@ public class MainMenuActivity extends Activity {
 			Common.log(3, TAG, "Arranquei a Activity Article Activity");
 		} else {
 			Common.log(5, TAG, "launchArticleFromEAN: null article received");
-			//Toast.makeText(this, "Não foi possível obter informação sobre o artigo com ean '" + ean + "'", Toast.LENGTH_LONG).show();
+			Common.longToast(this, responseStr);
 		}
 	}
 
@@ -330,13 +327,21 @@ public class MainMenuActivity extends Activity {
     }
 
 	public Handler httpThreadHandler = new Handler() {
-        public void handleMessage(android.os.Message msg) {
-        	String responseStr = "ORIGINAL STATE";
+		public void handleMessage(android.os.Message msg) {
         	switch (msg.what) {
-        	case Common.httpVariables.SUCCESS_FALSE:
-        		responseStr = "Retorno SEM resultado";
+        	case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
+        		responseStr = "Supplied value was not valid";
         		break;
-        	case Common.httpVariables.SUCCESS_TRUE:
+        	case HTTPRequest.responseOutputs.FAILED_QUERY_FROM_INTERNET:
+        		responseStr = "No answer from internet (connection or server down)";
+        		break;
+        	case HTTPRequest.responseOutputs.FAILED_GETTING_VALID_RESPONSE_FROM_QUERY:
+        		responseStr = "Query return was empty";
+        		break;
+        	case HTTPRequest.responseOutputs.FAILED_PROCESSING_RETURNED_OBJECT:
+        		responseStr = "Query was invalid (not compatible with expected result)";
+        		break;
+        	case HTTPRequest.responseOutputs.SUCCESS:
         		responseStr = "Retorno COM resultado"; 
         		scannedArticle = (Article) msg.getData().getSerializable("response");
         		break;

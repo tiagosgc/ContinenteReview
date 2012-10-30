@@ -42,6 +42,7 @@ public class ArticleActivity extends Activity {
 
 			} catch (Exception e) {
 				Common.log(1, TAG, "Erro no carregamento da imagem do artigo no link " + Common.httpVariables.IMAGE_PREFIX + article.getImageURL() + "\nErro e:" + e.getMessage());
+				e.printStackTrace();
 			}
 		}
 

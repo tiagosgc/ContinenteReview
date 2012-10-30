@@ -25,8 +25,6 @@ public class Common {
 	public static final class httpVariables {
 		public final static String SERVER_IP = "195.170.168.33";
 		public final static String IMAGE_PREFIX = "http://www.continente.pt/Images/media/Products/";
-		public final static int SUCCESS_TRUE = 11;
-		public final static int SUCCESS_FALSE = 12;
 	}
 	
 	public static void log(int debugLevel, String tag, String msg) {
@@ -36,6 +34,10 @@ public class Common {
 
 	public static void shortToast(Context c, String msg) {
 		Toast.makeText(c, msg, Toast.LENGTH_SHORT).show();
+	}
+	
+	public static void longToast(Context c, String msg) {
+		Toast.makeText(c, msg, Toast.LENGTH_LONG).show();
 	}
 	
 	public static int pixelsFromDPs(Context c, int DPs) {

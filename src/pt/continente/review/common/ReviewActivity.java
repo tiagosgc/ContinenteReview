@@ -13,14 +13,17 @@ import pt.continente.review.tables.ReviewsTable;
 import pt.continente.review.tables.SQLiteHelper;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -33,57 +36,47 @@ public class ReviewActivity extends Activity {
 	private Article article = null; 
 	private Review review = null; 
 	private List<Dimension> dimensions = null;
-
+	private static ProgressDialog dialog;
+	private DimensionsList newRevDims = null;
+	private String responseStr = "ORIGINAL STATE";
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Common.log(5, TAG, "onCreate: started");
 		setContentView(R.layout.activity_review);
 		
+		/*
+		 * Attempts to get either an Id of an existing review or the object of
+		 * the article already retrieved for a new review
+		 */
 		long revId = (long) getIntent().getLongExtra("revId", -1);
 		article = (Article) getIntent().getSerializableExtra("Article");
+		
+		
 		if (revId != -1) {
 			Common.log(5, TAG, "onCreate: will create recover existing review");
 			int result = getDataFromRevId(revId);
 			if (result < 0) {
 				Common.log(1, TAG, "onCreate: ERROR getting information from DB; cannot continue (revId = '" + revId + "'");
 				Toast.makeText(this, "Error getting information from DB; cannot continue", Toast.LENGTH_LONG).show();
-			}
+			} else
+				showReview();
 		} else if (article != null) {
 			Common.log(5, TAG, "onCreate: will create new review");
-			if(!addNewReview()) {
-				Common.log(1, TAG, "onCreate: ERROR adding data to tables (result was '" + revId + "'");
-			}
+
+			String url = "http://" + Common.httpVariables.SERVER_IP + "/ContinenteReview/dimensions.php?article_id=" + article.getId();
+			Common.log(5, TAG, "onCreate: will atempt to launch service to get content from url '" + url + "'");
+			
+			HTTPRequest myHttpThread = new HTTPRequest(httpThreadHandler, url, HTTPRequest.requestTypes.GET_DIMENSIONS);
+			myHttpThread.start();
+			dialog = ProgressDialog.show(this, "A ober informação", "a consultar...");
+			
 		} else {
 			Common.log(1, TAG, "onCreate: ERROR activity started with unexpected inputs");
 		}
-		
-		Common.log(5, TAG, "onCreate: will set text info in activity");
-		TextView t = (TextView) findViewById(R.id.articleName);
-		t.setText(article.getName());
-
-		Common.log(5, TAG, "onCreate: will set bitmap");
-		Bitmap productBitmap = article.getImage();
-		if(productBitmap == null) {
-			Common.log(3, TAG, "onCreate: article object did not contain image; will attempt to get from URL");
-			try {
-				URL url = new URL(Common.httpVariables.IMAGE_PREFIX + article.getImageURL());
-				InputStream is = (InputStream) url.getContent();
-				productBitmap = BitmapFactory.decodeStream(is);
-			} catch (Exception e) {
-				Common.log(1, TAG, "onCreate: Erro no carregamento da imagem do artigo no link " + Common.httpVariables.IMAGE_PREFIX + article.getImageURL() + "\nErro e:" + e.getMessage());
-			}
-		}
-		if(productBitmap == null) {
-			ImageView i = (ImageView) findViewById(R.id.articleIcon);
-			i.setImageBitmap(productBitmap);
-		}
-		
-		Common.log(5, TAG, "onCreate: will draw dimensions");
-		if (dimensions != null)
-			addDimensions();
 	}
-
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.activity_article, menu);
@@ -169,19 +162,50 @@ public class ReviewActivity extends Activity {
     		return 0;
 	}
 	
-	private boolean addNewReview() {
-		Common.log(5, TAG, "getDataFromRevId: started");
+	
+	private void showReview() {
+		Common.log(5, TAG, "onCreate: will set text info in activity");
 
+		if (article != null)
+			addNewReview();
+		
+		TextView t = (TextView) findViewById(R.id.articleName);
+		t.setText(article.getName());
+
+		Common.log(5, TAG, "showReview: will set bitmap");
+		Bitmap productBitmap = article.getImage();
+		if(productBitmap == null) {
+			Common.log(3, TAG, "showReview: article object did not contain image; will attempt to get from URL");
+			try {
+				URL url = new URL(Common.httpVariables.IMAGE_PREFIX + article.getImageURL());
+				InputStream is = (InputStream) url.getContent();
+				productBitmap = BitmapFactory.decodeStream(is);
+			} catch (Exception e) {
+				Common.log(1, TAG, "showReview: Erro no carregamento da imagem do artigo no link " + Common.httpVariables.IMAGE_PREFIX + article.getImageURL() + "\nErro e:" + e.getMessage());
+			}
+		}
+		if(productBitmap == null) {
+			ImageView i = (ImageView) findViewById(R.id.articleIcon);
+			i.setImageBitmap(productBitmap);
+		}
+		
+		Common.log(5, TAG, "showReview: will draw dimensions");
+		if (dimensions != null)
+			addDimensions();
+	}
+
+
+	private boolean addNewReview() {
+		
     	SQLiteHelper dbHelper = new SQLiteHelper(this);
-    	
-    	List<Dimension> newRevDims = new HTTPGateway().getDimensions(article.getId());
     	
     	if(newRevDims == null) {
     		Common.log(1, TAG, "addNewReview: could not retrieve dimensions from Host");
+    		Common.longToast(this, responseStr);
     		return false;
     	}
 		Common.log(5, TAG, "addNewReview: retrieved '" + newRevDims.size() + "' dimensions for Article with Id '" + article.getId() + "'");
-    	dimensions = newRevDims;
+    	dimensions = newRevDims.getObject();
 		
     	/*
     	 *  Add Article to Table
@@ -238,10 +262,16 @@ public class ReviewActivity extends Activity {
 		}
 		
 		LinearLayout linLay = (LinearLayout) this.findViewById(R.id.mainLinLay);;
+
+		LinearLayout.LayoutParams linLayParams = new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+		linLayParams.bottomMargin = Common.pixelsFromDPs(this, 20);
 		
+		LinearLayout.LayoutParams dimTxtParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 1f);
+
 		for (Dimension dim : dimensions) {
 			LinearLayout newLinLay = new LinearLayout(this);
 			newLinLay.setOrientation(LinearLayout.VERTICAL);
+			newLinLay.setLayoutParams(linLayParams);
 			
 			TextView newLabel = new TextView(this);
 			newLabel.setText(dim.getLabel());
@@ -256,9 +286,8 @@ public class ReviewActivity extends Activity {
 			TextView newMin = new TextView(this);
 			newMin.setText(dim.getMin());
 			newMin.setGravity(Gravity.LEFT);
+			newMin.setLayoutParams(dimTxtParams);
 			newLinLayClass.addView(newMin);
-			
-			//TODO definir weight dos textviews como 1
 			
 			TextView newMed = new TextView(this);
 			if(dim.getMed() != null && dim.getMed() != "")
@@ -266,11 +295,13 @@ public class ReviewActivity extends Activity {
 			else
 				newMed.setText("");
 			newMed.setGravity(Gravity.CENTER_HORIZONTAL);
+			newMed.setLayoutParams(dimTxtParams);
 			newLinLayClass.addView(newMed);
 			
 			TextView newMax = new TextView(this);
 			newMax.setText(dim.getMax());
 			newMax.setGravity(Gravity.RIGHT);
+			newMax.setLayoutParams(dimTxtParams);
 			newLinLayClass.addView(newMax);
 			
 
@@ -319,4 +350,30 @@ public class ReviewActivity extends Activity {
 		alert.show();
 		Common.log(5, TAG, "reviewComment: will exit");
 	}
+
+	public Handler httpThreadHandler = new Handler() {
+		public void handleMessage(android.os.Message msg) {
+        	switch (msg.what) {
+        	case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
+        		responseStr = "Supplied value was not valid";
+        		break;
+        	case HTTPRequest.responseOutputs.FAILED_QUERY_FROM_INTERNET:
+        		responseStr = "No answer from internet (connection or server down)";
+        		break;
+        	case HTTPRequest.responseOutputs.FAILED_GETTING_VALID_RESPONSE_FROM_QUERY:
+        		responseStr = "Query return was empty";
+        		break;
+        	case HTTPRequest.responseOutputs.FAILED_PROCESSING_RETURNED_OBJECT:
+        		responseStr = "Query was invalid (not compatible with expected result)";
+        		break;
+        	case HTTPRequest.responseOutputs.SUCCESS:
+        		responseStr = "Retorno COM resultado"; 
+        		newRevDims = (DimensionsList) msg.getData().getSerializable("response");
+        		break;
+        	}
+        	if(dialog != null && dialog.isShowing())
+        		dialog.dismiss();
+        	showReview();
+        };
+    };
 }

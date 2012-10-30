@@ -1,52 +1,13 @@
 package pt.continente.review.common;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import android.os.Handler;
-
-public class HTTPGateway {
-	private static final String TAG = "CntRev - HTTPGATEWAY";
+public class HTTPResponseProcessor {
+	private static final String TAG = "CntRev - HTTPResponseProcessor";
 	
-	
-	public Document getXMLDocument(String url) {
-		Common.log(5, TAG, "getXMLDocument: Inicio de get da string:" + url);
-		
-		DocumentBuilder builder = null;
-		Document newDocument = null;
-		HttpResponse response = null;
-		
-		try {
-			HttpEntity entity = response.getEntity();
-			InputStream instream = entity.getContent();
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			dbf.setIgnoringElementContentWhitespace(true);
-			builder = dbf.newDocumentBuilder();
-			newDocument = builder.parse(instream);
-		} catch (Exception e) {
-			Common.log(3, TAG, "Erro no processamento do retorno - " + e.getMessage());
-			return null;
-		}
-		return newDocument;
-	}
-	
-	public Article getProduct(String ean) {
-		Common.log(5, TAG, "Inicio de getProduct com ean=" + ean);
-
-		Document document = getXMLDocument("http://" + Common.httpVariables.SERVER_IP + "/ContinenteReview/article.php?ean=" + ean);
-		return getProductFromDoc(document);
-	}
 
 	public static Article getProductFromDoc(Document document) {
 
@@ -114,12 +75,11 @@ public class HTTPGateway {
 		return gettedArticle;
 	}
 
-	public List<Dimension> getDimensions(long articleId) {
-		Common.log(5, TAG, "getDimensions: Inicio com article_id = "
-				+ articleId);
-
-		Document document = getXMLDocument("http://" + Common.httpVariables.SERVER_IP
-				+ "/ContinenteReview/dimensions.php?article_id=" + articleId);
+	
+	
+	
+	public static DimensionsList getDimensionsFromDoc(Document document) {
+		Common.log(5, TAG, "getDimensions: started");
 
 		if (document == null) {
 			return null;
@@ -128,10 +88,14 @@ public class HTTPGateway {
 		Element root;
 		NodeList dimensions;
 		NodeList dimensionNodes;
-		List<Dimension> returnList = new ArrayList<Dimension>();
+		DimensionsList returnList = new DimensionsList();
+		
 		document.getDocumentElement().normalize();
 		root = document.getDocumentElement();
 		dimensions = root.getChildNodes();
+		
+		Common.log(5, TAG, "getDimensions: found '" + dimensions.getLength() + "' elements in response");
+
 
 		Node proxNode;
 		Node proxDimension;
@@ -170,10 +134,9 @@ public class HTTPGateway {
 			Common.log(5, TAG, "" + id + ":" + name + "." + label + "*" + min + ";;" + med + ";;;" + max);
 			returnList.add(new Dimension(id,name,label,min,med,max));
 		}
+		Common.log(5, TAG, "getDimensions: built an array with '" + returnList.size() + "' elements");
+		Common.log(5, TAG, "getDimensions: finished");
 		return returnList;
-
-		// Log.d("Tiago", "resposta:" + result);
-
 	}
 
 //	private class httpGetTask extends AsyncTask<String, Integer, List<HttpResponse>> {

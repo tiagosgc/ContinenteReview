@@ -3,7 +3,6 @@ package pt.continente.review.common;
 
 public class Dimension {
 	//private static final String TAG = "CntRev - Article";
-
 	private long dimId;
 	private String dimName;
 	private String dimLabel;
