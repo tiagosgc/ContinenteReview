@@ -122,11 +122,15 @@ public class HTTPRequest extends Thread {
 			Common.log(5, TAG, "run: vai obter o documento a partir da resposta");
 			Document newDocument = null;
 			try {
-				HttpEntity entity = response.getEntity();
-				InputStream instream = entity.getContent();
 				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 				dbf.setIgnoringElementContentWhitespace(true);
 				DocumentBuilder builder = dbf.newDocumentBuilder();
+				
+				Common.log(5, TAG, "run: vai processar entity");
+				HttpEntity entity = response.getEntity();
+				Common.log(5, TAG, "run: vai processar stream");
+				InputStream instream = entity.getContent();
+				Common.log(5, TAG, "run: vai processar document");
 				newDocument = builder.parse(instream);
 			} catch (Exception e) {
 				Common.log(1, TAG, "run: ERROR processing the returned object - " + e.getMessage());
@@ -143,21 +147,17 @@ public class HTTPRequest extends Thread {
 				Common.log(5, TAG, "run: vai processar artigo");
 				Article newArticle = HTTPResponseProcessor.getProductFromDoc(newDocument);
 		        messageData.putSerializable("response", newArticle);
-				Common.log(5, TAG, "run: artigo processado");
 				break;
 			case requestTypes.GET_DIMENSIONS:
 				Common.log(5, TAG, "run: vai processar dimensões");
 				DimensionsList newDimList = HTTPResponseProcessor.getDimensionsFromDoc(newDocument);
 		        messageData.putSerializable("response", newDimList);
-				Common.log(5, TAG, "run: dimensões procesadas");
 				break;
 			}
 
-			Common.log(5, TAG, "run: vai finalizar e enviar mensagem 1");
+			Common.log(5, TAG, "run: vai finalizar e enviar mensagem");
 			messageToParent.what = responseOutputs.SUCCESS;
-			Common.log(5, TAG, "run: vai finalizar e enviar mensagem 2");
 	        messageToParent.setData(messageData);
-			Common.log(5, TAG, "run: vai finalizar e enviar mensagem 3");
 			parentHandler.sendMessage(messageToParent);
 		}
 		Common.log(5, TAG, "run: finished");
