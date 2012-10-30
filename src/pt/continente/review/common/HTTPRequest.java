@@ -57,17 +57,28 @@ public class HTTPRequest extends Thread {
 		try {
 			Thread.sleep(simulateDelay ? 2000 : 1);
         } catch (InterruptedException e) {
-        	e.printStackTrace();
+			Common.log(1, TAG, "run: ERROR in applying delay - " + e.getMessage());
+			e.printStackTrace();
         }
+		Common.log(5, TAG, "run: terminou o delay forçado");
 
-		Message messageToParent = new Message();
-		messageToParent.what = 0;
+		Message messageToParent = null;
+		DefaultHttpClient client = null;
+		HttpContext localContext = null;
+		try {
+			messageToParent = new Message();
+			client = new DefaultHttpClient();
+			localContext = new BasicHttpContext();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		Common.log(5, TAG, "run: criou as variáveis chave");
 		
-		DefaultHttpClient client = new DefaultHttpClient();
-		HttpContext localContext = new BasicHttpContext();
+		messageToParent.what = 0;
 		response = null;
 		HttpGet httpGet = null;
 		
+		Common.log(5, TAG, "run: vai criar objeto GET");
 		try {
 			httpGet = new HttpGet(urlBeingSought);
 		} catch (IllegalArgumentException e) {
@@ -80,7 +91,7 @@ public class HTTPRequest extends Thread {
 			return;
 		}
 		
-
+		Common.log(5, TAG, "run: vai obter dados da net");
 		try {
 			response = client.execute(httpGet, localContext);
 		} catch (ClientProtocolException e) {
@@ -101,12 +112,14 @@ public class HTTPRequest extends Thread {
 		}
 		
 		
+		Common.log(5, TAG, "run: vai processar respostas");
 		if (response == null) {
 			Common.log(3, TAG, "run: got empty response from query");
 			messageToParent.what = responseOutputs.FAILED_GETTING_VALID_RESPONSE_FROM_QUERY;
 			parentHandler.sendMessage(messageToParent);
 			return;
 		} else {
+			Common.log(5, TAG, "run: vai obter o documento a partir da resposta");
 			Document newDocument = null;
 			try {
 				HttpEntity entity = response.getEntity();
@@ -122,6 +135,7 @@ public class HTTPRequest extends Thread {
 				return;
 			}
 			
+			Common.log(5, TAG, "run: criar a mensagem a partir do documento");
 	        Bundle messageData = new Bundle();
 			
 			switch (requestType) {
@@ -130,7 +144,6 @@ public class HTTPRequest extends Thread {
 		        messageData.putSerializable("response", newArticle);
 				break;
 			case requestTypes.GET_DIMENSIONS:
-				//TODO alterar código para processar dimensions
 				DimensionsList newDimList = HTTPResponseProcessor.getDimensionsFromDoc(newDocument);
 		        messageData.putSerializable("response", newDimList);
 				break;
