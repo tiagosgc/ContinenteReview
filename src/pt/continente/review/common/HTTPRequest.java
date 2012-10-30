@@ -140,17 +140,24 @@ public class HTTPRequest extends Thread {
 			
 			switch (requestType) {
 			case requestTypes.GET_ARTICLE:
+				Common.log(5, TAG, "run: vai processar artigo");
 				Article newArticle = HTTPResponseProcessor.getProductFromDoc(newDocument);
 		        messageData.putSerializable("response", newArticle);
+				Common.log(5, TAG, "run: artigo processado");
 				break;
 			case requestTypes.GET_DIMENSIONS:
+				Common.log(5, TAG, "run: vai processar dimensões");
 				DimensionsList newDimList = HTTPResponseProcessor.getDimensionsFromDoc(newDocument);
 		        messageData.putSerializable("response", newDimList);
+				Common.log(5, TAG, "run: dimensões procesadas");
 				break;
 			}
 
+			Common.log(5, TAG, "run: vai finalizar e enviar mensagem 1");
 			messageToParent.what = responseOutputs.SUCCESS;
+			Common.log(5, TAG, "run: vai finalizar e enviar mensagem 2");
 	        messageToParent.setData(messageData);
+			Common.log(5, TAG, "run: vai finalizar e enviar mensagem 3");
 			parentHandler.sendMessage(messageToParent);
 		}
 		Common.log(5, TAG, "run: finished");
