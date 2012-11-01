@@ -172,7 +172,7 @@ public class HTTPRequest extends Thread {
 				newDocument.normalize();
 				firstChild = newDocument.getChildNodes().item(0).getNodeName();
 				if (firstChild == null) {
-					HttpResponseException e = new HttpResponseException(
+					HTTPResponseException e = new HTTPResponseException(
 							"Documento retornado é vazio");
 					e.setUrl(urlBeingSought);
 					throw e;
@@ -186,7 +186,7 @@ public class HTTPRequest extends Thread {
 				case requestTypes.GET_ARTICLE:
 					Common.log(5, TAG, "run: vai processar artigo");
 					if (firstChild.compareTo("article") != 0) {
-						HttpResponseException e = new HttpResponseException(
+						HTTPResponseException e = new HTTPResponseException(
 								"Documento não tem como primeiro elemento um artigo");
 						e.setUrl(urlBeingSought);
 						throw e;

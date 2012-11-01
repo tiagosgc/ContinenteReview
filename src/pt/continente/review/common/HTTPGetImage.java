@@ -6,7 +6,6 @@ import java.net.URL;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
@@ -23,8 +22,8 @@ public class HTTPGetImage extends Thread {
 	}
 
 	public HTTPGetImage(Handler parentHandler, URL url) {
-		this.urlBeingSought = url;
 		this.parentHandler = parentHandler;
+		this.urlBeingSought = url;
 	}
 
 	@Override
@@ -64,9 +63,12 @@ public class HTTPGetImage extends Thread {
 			return;
 		}
 		
+		Common.log(1, TAG, "run: product bitmap height: " + productBitmap.getHeight());
+		
 		messageToParent.what = responseOutputs.SUCCESS;
-        Bundle messageData = new Bundle();
-        messageData.putParcelable("response", productBitmap);
+		messageToParent.obj = productBitmap;
+//		OLD WAY - Bundle messageData = new Bundle();
+//		OLD WAY - messageData.putParcelable("response", (Parcelable) productBitmap);
 		parentHandler.sendMessage(messageToParent);
 		
 		Common.log(5, TAG, "run: finished");

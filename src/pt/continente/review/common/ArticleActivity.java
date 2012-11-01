@@ -16,9 +16,10 @@ import android.widget.TextView;
 
 public class ArticleActivity extends Activity {
 	private static final String TAG = "CntRev - ArticleActivity";
-	private Article article = null; 
+	private static Article article = null; 
 	private static ImageView imageView;
 	private static Context context;
+//	private final static Handler imageThreadHandler = new Handler();
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -43,9 +44,8 @@ public class ArticleActivity extends Activity {
 		if (articleImage == null) {
 			try {
 				URL url = new URL(Common.httpVariables.IMAGE_PREFIX + article.getImageURL());
-				HTTPGetImage imageThread = new HTTPGetImage(imageThreadHandler, url);
-				imageThread.start();
-
+				(new HTTPGetImage(imageThreadHandler, url)).start();
+//				TO USE ASYNCTASK - new GetImageTask().execute(url);
 			} catch (Exception e) {
 				Common.log(1, TAG, "Erro no carregamento da imagem do artigo no link " + Common.httpVariables.IMAGE_PREFIX + article.getImageURL() + "\nErro e:" + e.getMessage());
 				e.printStackTrace();
@@ -80,12 +80,63 @@ public class ArticleActivity extends Activity {
 				Common.longToast(context, "Error converting internet response into image");
 				break;
 			case HTTPGetImage.responseOutputs.SUCCESS:
-				Common.longToast(context, "Successfuly retrieved image");
-				Bitmap articleBitmap = (Bitmap) msg.getData().getParcelable("response");
-				imageView.setImageBitmap(articleBitmap);
+//				OLD WAY - Bitmap articleBitmap = (Bitmap) msg.getData().getParcelable("response");
+				Bitmap articleBitmap = (Bitmap) msg.obj;
+				if(articleBitmap != null) {
+					Common.longToast(context, "Successfuly retrieved image");
+					imageView.setImageBitmap(articleBitmap);
+					article.setImage(articleBitmap);
+				} else {
+					Common.longToast(context, "Retrieved image but was null");
+				}
 				break;
 			}
 			Common.log(5, TAG, "imageThreadHandler: finished");
 		};
 	};
+	
+//	class GetImageTask extends AsyncTask<URL, int[], Bitmap> {
+//
+//		@Override
+//		protected Bitmap doInBackground(URL... urlBeingSought) {
+//			InputStream is = null;
+//			try {
+//				is = (InputStream) urlBeingSought[0].getContent();
+//			} catch (IOException e) {
+//				Common.log(1, TAG, "run: ERROR while gettinf content - " + e.getMessage());
+//				return null;
+//			}
+//
+//			Bitmap productBitmap = BitmapFactory.decodeStream(is);
+//			
+//			if (productBitmap == null) {
+//				Common.log(1, TAG, "run: ERROR converting response to image");
+//				return null;
+//			}
+//			return productBitmap;
+//	    }
+//
+//	    @Override
+//	    protected void onPostExecute(Bitmap bitmapResult) {
+//	      super.onPostExecute(bitmapResult);
+//	      if (bitmapResult != null) {
+//	    	  imageView.setImageBitmap(bitmapResult);
+//	      } else
+//				Common.log(1, TAG, "GetImageTask: onPostExecute: ERROR image received is null");
+//	    }
+//	}
+//	
+//	public static class ImageUpdater implements Runnable {
+//		private final ImageView imageView;
+//		private final Bitmap bitmap;
+//		
+//		ImageUpdater(final ImageView imageView, final Bitmap bitmap) {
+//			this.imageView = imageView;
+//			this.bitmap = bitmap;
+//		}
+//		
+//		public void run() {
+//			imageView.setImageBitmap(bitmap);
+//		}
+//	}
 }
