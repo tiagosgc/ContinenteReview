@@ -12,7 +12,7 @@ import android.widget.Toast;
 
 public class Common {
 	//private static final String TAG = "CntRev - Common";
-	private static final int LOG_LEVEL = 5;
+	private static final int LOG_LEVEL = 7;
 	
 	public static final class revStates {
 		public static final int PENDING_USER = 1;

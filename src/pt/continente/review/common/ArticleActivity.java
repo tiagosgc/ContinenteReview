@@ -42,6 +42,7 @@ public class ArticleActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		Common.log(5, TAG, "onCreate: started");
 
 		if (article == null) {
 			finish();
@@ -65,6 +66,8 @@ public class ArticleActivity extends Activity {
 		} else {
 			imageView.setImageBitmap(articleImage);
 		}
+
+		Common.log(5, TAG, "onCreate: finished");
 	}
 
 	public void startReview(View view)

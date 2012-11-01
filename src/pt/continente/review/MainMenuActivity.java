@@ -168,12 +168,12 @@ public class MainMenuActivity extends Activity {
 	
 	private void launchArticleActivity() {
 		if (scannedArticle != null) {
-			Common.log(3, TAG, "Vou arrancar um novo article activity");
+			Common.log(7, TAG, "Vou arrancar um novo article activity");
 			Intent intent = new Intent(this, ArticleActivity.class);
-			Common.log(3, TAG, "Acabei de criar o Intent");
+			Common.log(7, TAG, "Acabei de criar o Intent");
 			intent.putExtra("Article", scannedArticle);
 			startActivity(intent);
-			Common.log(3, TAG, "Arranquei a Activity Article Activity");
+			Common.log(7, TAG, "Arranquei a Activity Article Activity");
 		} else {
 			Common.log(5, TAG, "launchArticleFromEAN: null article received");
 			Common.longToast(this, responseStr);

@@ -14,6 +14,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -25,7 +28,7 @@ import android.os.Message;
 public class HTTPRequest extends Thread {
 	private static final String TAG = "CntRev - HTTPRequest";
 
-	private String urlBeingSought;
+	private String urlBeingSought; 
 	private HttpResponse response;
 	private Handler parentHandler;
 	private int requestType;
@@ -41,6 +44,7 @@ public class HTTPRequest extends Thread {
 		public final static int FAILED_QUERY_FROM_INTERNET = 12;
 		public final static int FAILED_GETTING_VALID_RESPONSE_FROM_QUERY = 13;
 		public final static int FAILED_PROCESSING_RETURNED_OBJECT = 14;
+		public final static int FAILED_OBJECT_NOT_FOUND = 14;
 	}
 
 	public HTTPRequest(Handler parentHandler, String url, int requestType) {
@@ -54,17 +58,7 @@ public class HTTPRequest extends Thread {
 	public void run() {
 		super.run();
 		Common.log(5, TAG, "run: started");
-		String firstChild = null;
-		// simulates delay in fetch
-		boolean simulateDelay = true;
-		try {
-			Thread.sleep(simulateDelay ? 2000 : 1);
-		} catch (InterruptedException e) {
-			Common.log(1, TAG,
-					"run: ERROR in applying delay - " + e.getMessage());
-			e.printStackTrace();
-		}
-		Common.log(5, TAG, "run: terminou o delay forçado");
+		
 		Message messageToParent = null;
 		DefaultHttpClient client = null;
 		HttpContext localContext = null;
@@ -75,13 +69,9 @@ public class HTTPRequest extends Thread {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		Common.log(5, TAG, "run: criou as variáveis chave");
-
 		messageToParent.what = 0;
 		response = null;
 		HttpGet httpGet = null;
-
-		Common.log(5, TAG, "run: vai criar objeto GET");
 		try {
 			httpGet = new HttpGet(urlBeingSought);
 		} catch (IllegalArgumentException e) {
@@ -98,19 +88,11 @@ public class HTTPRequest extends Thread {
 		try {
 			response = client.execute(httpGet, localContext);
 		} catch (ClientProtocolException e) {
-			Common.log(1, TAG,
-					"run: ERROR obtaining response to internet query (ClientProtocolException) - "
-							+ e.getMessage());
+
 			messageToParent.what = responseOutputs.FAILED_QUERY_FROM_INTERNET;
 		} catch (IOException e) {
-			Common.log(1, TAG,
-					"run: ERROR obtaining response to internet query (IOException) - "
-							+ e.getMessage());
 			messageToParent.what = responseOutputs.FAILED_QUERY_FROM_INTERNET;
 		} catch (Exception e) {
-			Common.log(1, TAG,
-					"run: ERROR obtaining response to internet query (UndefinedException) - "
-							+ e.getMessage());
 			e.printStackTrace();
 			messageToParent.what = responseOutputs.FAILED_QUERY_FROM_INTERNET;
 		}
@@ -119,105 +101,198 @@ public class HTTPRequest extends Thread {
 			parentHandler.sendMessage(messageToParent);
 			return;
 		}
-
-		Common.log(5, TAG, "run: vai processar respostas");
 		if (response == null) {
 			Common.log(3, TAG, "run: got empty response from query");
 			messageToParent.what = responseOutputs.FAILED_GETTING_VALID_RESPONSE_FROM_QUERY;
 			parentHandler.sendMessage(messageToParent);
 			return;
 		} else {
-			Common.log(5, TAG,
-					"run: vai obter o documento a partir da resposta");
 			Document newDocument = null;
 			try {
-
-				DocumentBuilderFactory dbf = DocumentBuilderFactory
-						.newInstance();
-
+				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 				dbf.setValidating(false);
-				// dbf.setNamespaceAware(true);
 				dbf.setIgnoringElementContentWhitespace(true);
 				DocumentBuilder builder = dbf.newDocumentBuilder();
-
 				builder.setErrorHandler(new ErrorHandler() {
 					@Override
-					public void error(SAXParseException arg0)
-							throws SAXException {
+					public void error(SAXParseException arg0) throws SAXException {
 						Common.log(5, TAG, "document builder error 1 ");
 						throw arg0;
 					}
 
 					@Override
-					public void fatalError(SAXParseException arg0)
-							throws SAXException {
+					public void fatalError(SAXParseException arg0) throws SAXException {
 						Common.log(5, TAG, "document builder error 2 ");
 						throw arg0;
 					}
 
 					@Override
-					public void warning(SAXParseException arg0)
-							throws SAXException {
+					public void warning(SAXParseException arg0) throws SAXException {
 						Common.log(5, TAG, "document builder error 3 ");
 						throw arg0;
 					}
 				});
-				Common.log(5, TAG, "run: vai processar entity");
 				HttpEntity entity = response.getEntity();
-				Common.log(5, TAG, "run: vai processar stream");
 				InputStream instream = entity.getContent();
-				Common.log(5, TAG, "run: vai processar document");
 				newDocument = builder.parse(instream);
 				newDocument.normalizeDocument();
 				newDocument.normalize();
-				firstChild = newDocument.getChildNodes().item(0).getNodeName();
-				if (firstChild == null) {
-					HTTPResponseException e = new HTTPResponseException(
-							"Documento retornado é vazio");
-					e.setUrl(urlBeingSought);
-					throw e;
-				}
-
-				Common.log(5, TAG,
-						"run: criar a mensagem a partir do documento");
 				Bundle messageData = new Bundle();
-
+				
+				if (newDocument.getDocumentElement().getChildNodes().item(0).getNodeName().compareTo("error") == 0) {
+					messageToParent.what = responseOutputs.FAILED_OBJECT_NOT_FOUND;
+					parentHandler.sendMessage(messageToParent);
+					return;
+				}
+				
 				switch (requestType) {
 				case requestTypes.GET_ARTICLE:
-					Common.log(5, TAG, "run: vai processar artigo");
-					if (firstChild.compareTo("article") != 0) {
-						HTTPResponseException e = new HTTPResponseException(
-								"Documento não tem como primeiro elemento um artigo");
-						e.setUrl(urlBeingSought);
-						throw e;
-					}
-					Article newArticle = HTTPResponseProcessor
-							.getProductFromDoc(newDocument);
+					Article newArticle = HTTPRequest.getProductFromDoc(newDocument);
 					messageData.putSerializable("response", newArticle);
 					break;
 				case requestTypes.GET_DIMENSIONS:
 					Common.log(5, TAG, "run: vai processar dimensões");
-					DimensionsList newDimList = HTTPResponseProcessor
-							.getDimensionsFromDoc(newDocument);
+					DimensionsList newDimList = getDimensionsFromDoc(newDocument);
 					messageData.putSerializable("response", newDimList);
-					break;
+					break; 
 				}
-
-				Common.log(5, TAG, "run: vai finalizar e enviar mensagem");
 				messageToParent.what = responseOutputs.SUCCESS;
 				messageToParent.setData(messageData);
 				parentHandler.sendMessage(messageToParent);
 			} catch (Exception e) {
-				Common.log(
-						1,
-						TAG,
-						"run: ERROR processing the returned object - "
-								+ e.getMessage());
+				Common.log(1, TAG, "run: ERROR processing the returned object - " + e.getMessage());
 				messageToParent.what = responseOutputs.FAILED_PROCESSING_RETURNED_OBJECT;
 				parentHandler.sendMessage(messageToParent);
 				return;
 			}
 		}
 		Common.log(5, TAG, "run: finished");
+	}
+
+	public static DimensionsList getDimensionsFromDoc(Document document) {
+		Common.log(5, TAG, "getDimensions: started");
+	
+		if (document == null) {
+			return null;
+		}
+		
+		Element root;
+		NodeList dimensions;
+		NodeList dimensionNodes;
+		DimensionsList returnList = new DimensionsList();
+		
+		document.getDocumentElement().normalize();
+		root = document.getDocumentElement();
+		dimensions = root.getChildNodes();
+		
+		Common.log(5, TAG, "getDimensions: found '" + dimensions.getLength() + "' elements in response");
+	
+	
+		Node proxNode;
+		Node proxDimension;
+		long id = 0 ;
+		String name = "";
+		String label = "";
+		String min = "";
+		String med = "";
+		String max = "";
+	
+		// str = str.replaceAll("[0-9]", "X");
+		for (int i = 0; i < dimensions.getLength(); i++) {
+			proxDimension = dimensions.item(i);
+			dimensionNodes = proxDimension.getChildNodes();
+			for (int j = 0; j < dimensionNodes.getLength(); j++) {
+				proxNode = dimensionNodes.item(j);
+				if (proxNode.getNodeName().compareTo("id") == 0) {
+					id = Long.parseLong(proxNode.getTextContent());
+				}
+				if (proxNode.getNodeName().compareTo("name") == 0) {
+					name = proxNode.getTextContent();
+				}
+				if (proxNode.getNodeName().compareTo("labelDimension") == 0) {
+					label = proxNode.getTextContent();
+				}
+				if (proxNode.getNodeName().compareTo("labelMin") == 0) {
+					min = proxNode.getTextContent();
+				}
+				if (proxNode.getNodeName().compareTo("labelMed") == 0) {
+					med = proxNode.getTextContent();
+				}
+				if (proxNode.getNodeName().compareTo("labelMax") == 0) {
+					max = proxNode.getTextContent();
+				}
+			}
+			Common.log(5, TAG, "" + id + ":" + name + "." + label + "*" + min + ";;" + med + ";;;" + max);
+			returnList.add(new Dimension(id,name,label,min,med,max));
+		}
+		Common.log(5, TAG, "getDimensions: built an array with '" + returnList.size() + "' elements");
+		Common.log(5, TAG, "getDimensions: finished");
+		return returnList;
+	}
+
+	public static Article getProductFromDoc(Document document) {
+	
+		if (document == null) {
+			return null;
+		}
+		
+		Element root;
+		NodeList nodeList;
+	
+		document.getDocumentElement().normalize();
+		root = document.getDocumentElement();
+		nodeList = root.getChildNodes();
+		
+		Node proxNode;
+		String id = "-1";
+		String name = "";
+		String description = "Description";
+		String productEan = "";
+		String price = "";
+		String urlImg = "";
+		String prodStructL1 = "";
+		String prodStructL2 = "";
+		String prodStructL3 = "";
+		String prodStructL4 = "";
+	
+		for (int i = 0; i < nodeList.getLength(); i++) {
+			proxNode = nodeList.item(i);
+			if (proxNode.getNodeName().compareTo("id") == 0) {
+				id = proxNode.getTextContent();
+			}
+			if (proxNode.getNodeName().compareTo("name") == 0) {
+				name = proxNode.getTextContent();
+			}
+			if (proxNode.getNodeName().compareTo("ean") == 0) {
+				productEan = proxNode.getTextContent();
+			}
+			if (proxNode.getNodeName().compareTo("price") == 0) {
+				price = proxNode.getTextContent();
+			}
+			if (proxNode.getNodeName().compareTo("urlImg") == 0) {
+				urlImg = proxNode.getTextContent();
+			}
+			if (proxNode.getNodeName().compareTo("prodStructL1") == 0) {
+				prodStructL1 = proxNode.getTextContent();
+			}
+			if (proxNode.getNodeName().compareTo("prodStructL2") == 0) {
+				prodStructL2 = proxNode.getTextContent();
+			}
+			if (proxNode.getNodeName().compareTo("prodStructL3") == 0) {
+				prodStructL3 = proxNode.getTextContent();
+			}
+			if (proxNode.getNodeName().compareTo("prodStructL4") == 0) {
+				prodStructL4 = proxNode.getTextContent();
+			}
+	
+		}
+		Common.log(3, TAG, "Name(String):" + name);
+		Article gettedArticle = new Article(Long.parseLong(id), name,
+				description, productEan, Double.parseDouble(price), urlImg,
+				null, Integer.parseInt(prodStructL1),
+				Integer.parseInt(prodStructL2), Integer.parseInt(prodStructL3),
+				Integer.parseInt(prodStructL4));
+		Common.log(3, TAG, "" + gettedArticle);
+		return gettedArticle;
 	}
 }
