@@ -161,7 +161,7 @@ public class MainMenuActivity extends Activity {
 		
 		scannedArticle = null;
 		(new HTTPRequest(new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_ARTICLE)).start();
-		dialog = ProgressDialog.show(this, "A ober informação", "a consultar...");
+		dialog = ProgressDialog.show(this, "A obter informação", "a consultar...");
 		
 		Common.log(5, TAG, "launchArticleFromEAN: finished");
 	}

@@ -27,20 +27,18 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class ReviewActivity extends Activity {
 	private static final String TAG = "CntRev - ReviewActivity";
 
 	private static ImageView imageView;
 
-	private Article article = null; 
+	private static long revId;
+	private Article article = null;
 	private Review review = null; 
 	private List<Dimension> dimensions = null;
-	private DimensionsList newRevDims = null;
 
 	private ProgressDialog dialog;
-	private String responseStr = "ORIGINAL STATE";
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -54,29 +52,8 @@ public class ReviewActivity extends Activity {
 		 * Attempts to get either an Id of an existing review or the object of
 		 * the article already retrieved for a new review
 		 */
-		long revId = (long) getIntent().getLongExtra("revId", -1);
+		revId = (long) getIntent().getLongExtra("revId", -1);
 		article = (Article) getIntent().getSerializableExtra("Article");
-		
-		
-		if (revId != -1) {
-			Common.log(5, TAG, "onCreate: will create recover existing review");
-			int result = getDataFromRevId(revId);
-			if (result < 0) {
-				Common.log(1, TAG, "onCreate: ERROR getting information from DB; cannot continue (revId = '" + revId + "'");
-				Toast.makeText(this, "Error getting information from DB; cannot continue", Toast.LENGTH_LONG).show();
-			} else
-				showReview();
-		} else if (article != null) {
-			Common.log(5, TAG, "onCreate: will create new review");
-
-			String url = Common.httpVariables.DIMENSIONS_PREFIX + article.getId();
-			Common.log(5, TAG, "onCreate: will atempt to launch service to get content from url '" + url + "'");
-			(new HTTPRequest(new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_DIMENSIONS)).start();
-			dialog = ProgressDialog.show(this, "A ober informação", "a consultar...");
-			
-		} else {
-			Common.log(1, TAG, "onCreate: ERROR activity started with unexpected inputs");
-		}
 	}
 	
 	@Override
@@ -85,7 +62,110 @@ public class ReviewActivity extends Activity {
 		return true;
 	}
 	
-	private int getDataFromRevId(long revId) {
+	@Override
+	protected void onResume() {
+		super.onResume();
+		
+		/*
+		 * Must have at least one valid source
+		 */
+		if (revId == -1 && article == null) {
+			finish();
+			Common.longToast(this, "Error retrieving the Article; cannot continue");
+			return;
+		}
+		
+		if (revId == -1 && article != null) {
+				Common.log(5, TAG, "onResume: will check if received article already has a pending review");
+
+		    	SQLiteHelper dbHelper = new SQLiteHelper(this);
+		    	ReviewsTable revTab;
+		    	try {
+					revTab = new ReviewsTable(dbHelper);
+					revTab.open();
+				} catch (Exception e) {
+					shutdownWithError(
+							"onResume: ERROR could not open the table - " + e.getMessage(),
+							"Error accessing local tables; cannot continue");
+					return;
+				}
+		    	long revIdTmp = revTab.findItem(article.getId());
+		    	if (revIdTmp > 0) {
+					revId = revIdTmp;
+		    	}
+		    	revTab.close();
+		}
+		
+		if (revId != -1) {
+			Common.log(5, TAG, "onResume: will create recover existing review");
+			int result = getDataFromExistingReview(revId);
+			if (result < 0) {
+				shutdownWithError(
+						"onResume: ERROR getting information from DB; cannot continue (revId = '" + revId + "', result = '" + result + "'",
+						"Error getting information from DB; cannot continue");
+				return;
+			} else {
+				showReview();
+			}
+			
+			
+		} else if (article != null) {
+			Common.log(5, TAG, "onResume: review for received article not present, will create new");
+
+	    	String url = Common.httpVariables.DIMENSIONS_PREFIX + article.getId();
+			Common.log(5, TAG, "onResume: will atempt to launch service to get content from url '" + url + "'");
+			(new HTTPRequest(new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_DIMENSIONS)).start();
+			dialog = ProgressDialog.show(this, "A obter informação", "a consultar...");
+		}
+	}
+	
+	
+	private void showReview() {
+		Common.log(5, TAG, "onCreate: will set text info in activity");
+		
+//		if (revId == -1 && article != null) {
+//			addNewReview();
+//		}
+		
+		if (review == null || article == null || dimensions == null) {
+			shutdownWithError(
+					"showReview: ERROR no valid source to update view; cannot continue",
+					"Error getting data to present; cannot continue");
+			return;
+		}
+		
+		TextView t = (TextView) findViewById(R.id.articleName);
+		t.setText(article.getName());
+
+		Common.log(5, TAG, "showReview: will set bitmap");
+		Bitmap productBitmap = article.getImage();
+		if(productBitmap == null) {
+			Common.log(1, TAG, "showReview: ERROR article object did not contain image; will attempt to get from URL");
+		} else {
+			imageView.setImageBitmap(productBitmap);
+		}
+		
+		Common.log(5, TAG, "showReview: will draw dimensions");
+		if (dimensions != null)
+			drawDimensions();
+	}
+
+	private void shutdownWithError(String debugText, String userText) {
+		Common.log(1, TAG, debugText);
+		finish();
+		Common.longToast(this, userText);
+	}
+	
+	/**
+	 * @param revId ID of review from which data should be retrieved
+	 * @return
+	 * <b>0</b> if all objects (<b><i>review</i></b>, <b><i>article</i></b> and <b><i>dimensions</i></b>) were properly populated<br>
+	 * <b>-1</b> if an error occurred when opening a table (see Log to check which one)<br>
+	 * <b>-2</b> if an error occurred when getting a specific object from a table (see Log to check which one)<br>
+	 * <b>-3</b> if no dimensions were returned for current review<br>
+	 * <b>-4</b> if not all review dimensions were found in the Dimensions table
+	 */
+	private int getDataFromExistingReview(long revId) {
 		Common.log(5, TAG, "getDataFromRevId: started");
     	SQLiteHelper dbHelper = new SQLiteHelper(this);
     	
@@ -94,13 +174,13 @@ public class ReviewActivity extends Activity {
 			revTab = new ReviewsTable(dbHelper);
 			revTab.open();
 		} catch (Exception e) {
-			Common.log(1, TAG, "getDataFromRevId: could not open the table 1 - " + e.getMessage());
+			Common.log(1, TAG, "getDataFromRevId: could not open the Reviews table - " + e.getMessage());
 			return -1;
 		}
     	review = revTab.getItem(revId);
     	revTab.close();
     	if (review == null) {
-    		Common.log(1, TAG, "getDataFromRevId: could not get Object from DB 1");
+    		Common.log(1, TAG, "getDataFromRevId: could not get Review from DB");
     		return -2;
     	}
     	Common.log(5, TAG, "getDataFromRevId: built Review with Id '" + review.getId() + "'");
@@ -110,13 +190,13 @@ public class ReviewActivity extends Activity {
 			artTab = new ArticlesTable(dbHelper);
 			artTab.open();
 		} catch (Exception e) {
-			Common.log(1, TAG, "getDataFromRevId: could not open the table 2 - " + e.getMessage());
+			Common.log(1, TAG, "getDataFromRevId: could not open the Articles table - " + e.getMessage());
 			return -1;
 		}
     	article = artTab.getItem(review.getArticleId());
     	artTab.close();
     	if (article == null) {
-    		Common.log(1, TAG, "getDataFromRevId: could not get Object from DB 2");
+    		Common.log(1, TAG, "getDataFromRevId: could not get Artcile from DB");
     		return -2;
     	}
     	Common.log(5, TAG, "getDataFromRevId: built Article with Id '" + article.getId() + "'");
@@ -126,13 +206,13 @@ public class ReviewActivity extends Activity {
     		revDimTab = new ReviewDimensionsTable(dbHelper);
     		revDimTab.open();
 		} catch (Exception e) {
-			Common.log(1, TAG, "getDataFromRevId: could not open the table 3 - " + e.getMessage());
+			Common.log(1, TAG, "getDataFromRevId: could not open the ReviewsDimensions table - " + e.getMessage());
 			return -1;
 		}
     	List<Long> revDims = revDimTab.getAllItemsOfReview(review.getId());
     	revDimTab.close();
     	if (revDims == null) {
-    		Common.log(1, TAG, "getDataFromRevId: could not get Object from DB 3");
+    		Common.log(1, TAG, "getDataFromRevId: could not get Reviews Dimensions from DB");
 			return -2;
     	}
     	Common.log(5, TAG, "getDataFromRevId: got '" + revDims.size() + "' revDims from table");
@@ -146,7 +226,7 @@ public class ReviewActivity extends Activity {
     		dimTab = new DimensionsTable(dbHelper);
     		dimTab.open();
 		} catch (Exception e) {
-			Common.log(1, TAG, "getDataFromRevId: could not open the table 4 - " + e.getMessage());
+			Common.log(1, TAG, "getDataFromRevId: could not open the Dimensions table - " + e.getMessage());
 			return -1;
 		}
     	for(long revDim : revDims) {
@@ -165,41 +245,11 @@ public class ReviewActivity extends Activity {
 	}
 	
 	
-	private void showReview() {
-		Common.log(5, TAG, "onCreate: will set text info in activity");
-
-		if (article != null)
-			addNewReview();
-		
-		TextView t = (TextView) findViewById(R.id.articleName);
-		t.setText(article.getName());
-
-		Common.log(5, TAG, "showReview: will set bitmap");
-		Bitmap productBitmap = article.getImage();
-		if(productBitmap == null) {
-			Common.log(1, TAG, "showReview: ERROR article object did not contain image; will attempt to get from URL");
-		} else {
-			imageView.setImageBitmap(productBitmap);
-		}
-		
-		Common.log(5, TAG, "showReview: will draw dimensions");
-		if (dimensions != null)
-			addDimensions();
-	}
-
-
 	private boolean addNewReview() {
+		Common.log(5, TAG, "addNewReview: started");
 		
     	SQLiteHelper dbHelper = new SQLiteHelper(this);
     	
-    	if(newRevDims == null) {
-    		Common.log(1, TAG, "addNewReview: could not retrieve dimensions from Host");
-    		Common.longToast(this, responseStr);
-    		return false;
-    	}
-		Common.log(5, TAG, "addNewReview: retrieved '" + newRevDims.size() + "' dimensions for Article with Id '" + article.getId() + "'");
-    	dimensions = newRevDims.getObject();
-		
     	/*
     	 *  Add Article to Table
     	 */
@@ -227,28 +277,22 @@ public class ReviewActivity extends Activity {
 			Common.log(1, TAG, "addNewReview: could not open the table - " + e.getMessage());
 			return false;
 		}
-    	long revTmpId = -1;
-    	revTmpId = revTab.findItem(article.getId());
-    	if (revTmpId > 0) {
-			Common.log(5, TAG, "addNewReview: review already exists, will recover");
-			review = revTab.getItem(revTmpId);
-    	} else {
-			Common.log(5, TAG, "addNewReview: review is new - will add");
-	    	Review revTmp;
-	    	revTmp = new Review(-1, Common.revStates.WORK_IN_PROGRESS, article.getId(), null);
-	    	revTmpId = revTab.addItem(revTmp);
-	        Common.log(3, TAG, "addNewReview: created new review with ID '" + revTmpId + "'");
-	        
-    	}
+    	// Não verifica se já existe review para este artigo porque só chega aqui se, no onResume, já verificou que não existe
+		Common.log(5, TAG, "addNewReview: review is new - will add");
+    	Review revTmp;
+    	revTmp = new Review(-1, Common.revStates.WORK_IN_PROGRESS, article.getId(), null);
+    	long revTmpId = revTab.addItem(revTmp);
+        Common.log(3, TAG, "addNewReview: created new review with ID '" + revTmpId + "'");
     	revTab.close();
 		Common.log(5, TAG, "addNewReview: will exit");
     	if (revTmpId < 0)
     		return false;
-    	else
-    		return true;
+    	
+		Common.log(5, TAG, "addNewReview: finished");
+		return true;
 	}
 
-	private void addDimensions() {
+	private void drawDimensions() {
 		if (dimensions.size() <= 0) {
 			Common.log(3, TAG, "addDimensions: skiped entire method since there are no dimensions");
 			return;
@@ -354,27 +398,41 @@ public class ReviewActivity extends Activity {
 		@Override
 		public void handleMessage(android.os.Message msg) {
 			ReviewActivity outerClassLocalObj = outerClass.get();
-        	switch (msg.what) {
+			String errorMsg = null;
+			DimensionsList newRevDims = null;
+
+			switch (msg.what) {
         	case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
-        		outerClassLocalObj.responseStr = "Supplied value was not valid";
+        		errorMsg = "Supplied value was not valid";
         		break;
         	case HTTPRequest.responseOutputs.FAILED_QUERY_FROM_INTERNET:
-        		outerClassLocalObj.responseStr = "No answer from internet (connection or server down)";
+        		errorMsg = "No answer from internet (connection or server down)";
         		break;
         	case HTTPRequest.responseOutputs.FAILED_GETTING_VALID_RESPONSE_FROM_QUERY:
-        		outerClassLocalObj.responseStr = "Query return was empty";
+        		errorMsg = "Query return was empty";
         		break;
         	case HTTPRequest.responseOutputs.FAILED_PROCESSING_RETURNED_OBJECT:
-        		outerClassLocalObj.responseStr = "Query was invalid (not compatible with expected result)";
+        		errorMsg = "Query was invalid (not compatible with expected result)";
         		break;
         	case HTTPRequest.responseOutputs.SUCCESS:
-        		outerClassLocalObj.responseStr = "Retorno COM resultado"; 
-        		outerClassLocalObj.newRevDims = (DimensionsList) msg.getData().getSerializable("response");
+        		newRevDims = (DimensionsList) msg.getData().getSerializable("response");
         		break;
         	}
+			
         	if(outerClassLocalObj.dialog != null && outerClassLocalObj.dialog.isShowing())
         		outerClassLocalObj.dialog.dismiss();
-        	outerClassLocalObj.showReview();
+        	
+        	if (msg.what != HTTPRequest.responseOutputs.SUCCESS) {
+        		outerClassLocalObj.shutdownWithError(
+    					"httpRequestHandler: ERROR - " + errorMsg,
+    					"Error obtaining information for Article review; cannot continue");
+        	} else if(newRevDims == null) {
+        		outerClassLocalObj.shutdownWithError(
+    					"httpRequestHandler: ERROR - received dimensions where null",
+    					"Error obtaining information for Article review; cannot continue");
+        	} else {
+        		outerClassLocalObj.addNewReview();
+        	}
         }
     }
 }

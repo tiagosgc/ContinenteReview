@@ -19,7 +19,6 @@ public class ArticleActivity extends Activity {
 	private static Article article = null; 
 	private static ImageView imageView;
 	private static Context context;
-//	private final static Handler imageThreadHandler = new Handler();
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -28,18 +27,31 @@ public class ArticleActivity extends Activity {
 		setContentView(R.layout.activity_article);
 		context = this;
 		
-		TextView t = (TextView) findViewById(R.id.articleName);
 		imageView = (ImageView) findViewById(R.id.articleIcon);
-		
 		article = (Article) getIntent().getSerializableExtra("Article");
-		t.setText(article.getName());
 		
+		Common.log(5, TAG, "onCreate: finished");
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.activity_article, menu);
+		return true;
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+
 		if (article == null) {
 			finish();
 			Common.longToast(this, "Error retrieving the Article; cannot continue");
 			return;
 		}
 		
+		TextView t = (TextView) findViewById(R.id.articleName);
+		t.setText(article.getName());
+
 		Bitmap articleImage = article.getImage();
 		if (articleImage == null) {
 			try {
@@ -53,15 +65,8 @@ public class ArticleActivity extends Activity {
 		} else {
 			imageView.setImageBitmap(articleImage);
 		}
-		Common.log(5, TAG, "onCreate: finished");
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_article, menu);
-		return true;
-	}
-	
 	public void startReview(View view)
 	{
 		Intent intent = new Intent(this, ReviewActivity.class);
@@ -74,20 +79,22 @@ public class ArticleActivity extends Activity {
 			Common.log(5, TAG, "imageThreadHandler: started");
 			switch (msg.what) {
 			case HTTPGetImage.responseOutputs.FAILED_GETTING_CONTENT:
-				Common.longToast(context, "Error getting response from the internet");
+				Common.log(1, TAG, "imageThreadHandler: ERROR getting response from the internet");
+				Common.longToast(context, "Error loading image");
 				break;
 			case HTTPGetImage.responseOutputs.FAILED_CONVERTING_RESPONSE:
-				Common.longToast(context, "Error converting internet response into image");
+				Common.log(1, TAG, "imageThreadHandler: ERROR converting internet response into image");
+				Common.longToast(context, "Error loading image");
 				break;
 			case HTTPGetImage.responseOutputs.SUCCESS:
 //				OLD WAY - Bitmap articleBitmap = (Bitmap) msg.getData().getParcelable("response");
 				Bitmap articleBitmap = (Bitmap) msg.obj;
 				if(articleBitmap != null) {
-					Common.longToast(context, "Successfuly retrieved image");
 					imageView.setImageBitmap(articleBitmap);
 					article.setImage(articleBitmap);
 				} else {
-					Common.longToast(context, "Retrieved image but was null");
+					Common.log(1, TAG, "imageThreadHandler: ERROR retrieved image but was null");
+					Common.longToast(context, "Error loading image");
 				}
 				break;
 			}
@@ -124,19 +131,5 @@ public class ArticleActivity extends Activity {
 //	      } else
 //				Common.log(1, TAG, "GetImageTask: onPostExecute: ERROR image received is null");
 //	    }
-//	}
-//	
-//	public static class ImageUpdater implements Runnable {
-//		private final ImageView imageView;
-//		private final Bitmap bitmap;
-//		
-//		ImageUpdater(final ImageView imageView, final Bitmap bitmap) {
-//			this.imageView = imageView;
-//			this.bitmap = bitmap;
-//		}
-//		
-//		public void run() {
-//			imageView.setImageBitmap(bitmap);
-//		}
 //	}
 }
