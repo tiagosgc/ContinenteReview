@@ -1,5 +1,6 @@
 package pt.continente.review;
 
+import java.lang.ref.WeakReference;
 import java.util.Random;
 
 import pt.continente.review.common.Article;
@@ -30,10 +31,10 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 public class MainMenuActivity extends Activity { 
-
 	private static final String TAG = "CntRev - MainMenuActivity";
-	private static ProgressDialog dialog;
-	private static Article scannedArticle;
+
+	private ProgressDialog dialog;
+	private Article scannedArticle;
 	private String responseStr = "ORIGINAL STATE";
 
 	@Override
@@ -159,8 +160,7 @@ public class MainMenuActivity extends Activity {
 		Common.log(5, TAG, "launchArticleFromEAN: will atempt to launch service to get content from url '" + url + "'");
 		
 		scannedArticle = null;
-		HTTPRequest myHttpThread = new HTTPRequest(httpThreadHandler, url, HTTPRequest.requestTypes.GET_ARTICLE);
-		myHttpThread.start();
+		(new HTTPRequest(new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_ARTICLE)).start();
 		dialog = ProgressDialog.show(this, "A ober informação", "a consultar...");
 		
 		Common.log(5, TAG, "launchArticleFromEAN: finished");
@@ -326,30 +326,38 @@ public class MainMenuActivity extends Activity {
     	revDimTab.close();
     }
 
-	public Handler httpThreadHandler = new Handler() {
+	static class httpRequestHandler extends Handler {
+		WeakReference<MainMenuActivity> outerClass;
+		
+		httpRequestHandler(MainMenuActivity outerClass) {
+			this.outerClass = new WeakReference<MainMenuActivity>(outerClass);
+		}
+		
+		@Override
 		public void handleMessage(android.os.Message msg) {
-        	switch (msg.what) {
+			MainMenuActivity outerClassLocalObj = outerClass.get();
+			switch (msg.what) {
         	case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
-        		responseStr = "Supplied value was not valid";
+        		outerClassLocalObj.responseStr = "Supplied value was not valid";
         		break;
         	case HTTPRequest.responseOutputs.FAILED_QUERY_FROM_INTERNET:
-        		responseStr = "No answer from internet (connection or server down)";
+        		outerClassLocalObj.responseStr = "No answer from internet (connection or server down)";
         		break;
         	case HTTPRequest.responseOutputs.FAILED_GETTING_VALID_RESPONSE_FROM_QUERY:
-        		responseStr = "Query return was empty";
+        		outerClassLocalObj.responseStr = "Query return was empty";
         		break;
         	case HTTPRequest.responseOutputs.FAILED_PROCESSING_RETURNED_OBJECT:
-        		responseStr = "Query was invalid (not compatible with expected result)";
+        		outerClassLocalObj.responseStr = "Query was invalid (not compatible with expected result)";
         		break;
         	case HTTPRequest.responseOutputs.SUCCESS:
-        		responseStr = "Retorno COM resultado"; 
-        		scannedArticle = (Article) msg.getData().getSerializable("response");
+        		outerClassLocalObj.responseStr = "Retorno COM resultado"; 
+        		outerClassLocalObj.scannedArticle = (Article) msg.getData().getSerializable("response");
         		break;
         	}
-        	if(dialog != null && dialog.isShowing())
-        		dialog.dismiss();
-        	launchArticleActivity();
-        };
-    };
+        	if(outerClassLocalObj.dialog != null && outerClassLocalObj.dialog.isShowing())
+        		outerClassLocalObj.dialog.dismiss();
+        	outerClassLocalObj.launchArticleActivity();
+        }
+    }
 
 }
