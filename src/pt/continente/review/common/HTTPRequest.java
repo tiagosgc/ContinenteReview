@@ -113,34 +113,18 @@ public class HTTPRequest extends Thread {
 				dbf.setValidating(false);
 				dbf.setIgnoringElementContentWhitespace(true);
 				DocumentBuilder builder = dbf.newDocumentBuilder();
-				builder.setErrorHandler(new ErrorHandler() {
-					@Override
-					public void error(SAXParseException arg0) throws SAXException {
-						Common.log(5, TAG, "document builder error 1 ");
-						throw arg0;
-					}
-
-					@Override
-					public void fatalError(SAXParseException arg0) throws SAXException {
-						Common.log(5, TAG, "document builder error 2 ");
-						throw arg0;
-					}
-
-					@Override
-					public void warning(SAXParseException arg0) throws SAXException {
-						Common.log(5, TAG, "document builder error 3 ");
-						throw arg0;
-					}
-				});
+				
 				HttpEntity entity = response.getEntity();
 				InputStream instream = entity.getContent();
 				newDocument = builder.parse(instream);
 				newDocument.normalizeDocument();
 				newDocument.normalize();
 				Bundle messageData = new Bundle();
-				
-				if (newDocument.getDocumentElement().getChildNodes().item(0).getNodeName().compareTo("error") == 0) {
+				Node node = newDocument.getDocumentElement().getChildNodes().item(0);
+				if (node.getNodeName().compareTo("error") == 0) {
 					messageToParent.what = responseOutputs.FAILED_OBJECT_NOT_FOUND;
+					messageData.putString("errorMessage", node.getTextContent() );
+					messageToParent.setData(messageData);
 					parentHandler.sendMessage(messageToParent);
 					return;
 				}
