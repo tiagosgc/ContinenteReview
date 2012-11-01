@@ -23,8 +23,10 @@ public class Common {
 	}
 	
 	public static final class httpVariables {
-		public final static String SERVER_IP = "195.170.168.33";
-		public final static String IMAGE_PREFIX = "http://www.continente.pt/Images/media/Products/";
+		private static final String SERVER_IP = "195.170.168.33";
+		public static final String IMAGE_PREFIX = "http://www.continente.pt/Images/media/Products/";
+		public static final String ARTICLE_PREFIX = "http://" + SERVER_IP + "/ContinenteReview/article.php?ean=";
+		public static final String DIMENSIONS_PREFIX = "http://" + SERVER_IP + "/ContinenteReview/dimensions.php?article_id=";
 	}
 	
 	public static void log(int debugLevel, String tag, String msg) {

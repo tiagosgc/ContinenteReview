@@ -1,6 +1,6 @@
 package pt.continente.review.common;
 
-public class HttpResponseException extends Exception {
+public class HTTPResponseException extends Exception {
 
 	String detailMessage ="";
 	String url = "";
@@ -9,22 +9,22 @@ public class HttpResponseException extends Exception {
 	 */
 	private static final long serialVersionUID = 3703279369859671570L;
 
-	public HttpResponseException() {
+	public HTTPResponseException() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public HttpResponseException(String detailMessage) {
+	public HTTPResponseException(String detailMessage) {
 		super(detailMessage);
 		// TODO Auto-generated constructor stub
 	}
 
-	public HttpResponseException(Throwable throwable) {
+	public HTTPResponseException(Throwable throwable) {
 		super(throwable);
 		// TODO Auto-generated constructor stub
 	}
 
-	public HttpResponseException(String detailMessage, Throwable throwable) {
+	public HTTPResponseException(String detailMessage, Throwable throwable) {
 		super(detailMessage, throwable);
 		// TODO Auto-generated constructor stub
 	}

@@ -64,6 +64,10 @@ public class Article implements Serializable {
 		return artImage;
 	}
 
+	public void setImage(Bitmap artImage) {
+		this.artImage = artImage;
+	}
+
 	public int getStructureL1() {
 		return artStructureL1;
 	}

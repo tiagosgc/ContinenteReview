@@ -1,6 +1,7 @@
 package pt.continente.review.common;
 
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import pt.continente.review.tables.SQLiteHelper;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -33,11 +35,16 @@ import android.widget.Toast;
 
 public class ReviewActivity extends Activity {
 	private static final String TAG = "CntRev - ReviewActivity";
+
+	private static Context context;
+	private static ImageView imageView;
+
 	private Article article = null; 
 	private Review review = null; 
 	private List<Dimension> dimensions = null;
-	private static ProgressDialog dialog;
 	private DimensionsList newRevDims = null;
+
+	private ProgressDialog dialog;
 	private String responseStr = "ORIGINAL STATE";
 	
 	@Override
@@ -46,6 +53,9 @@ public class ReviewActivity extends Activity {
 		Common.log(5, TAG, "onCreate: started");
 		setContentView(R.layout.activity_review);
 		
+		context = this;
+		imageView = (ImageView) findViewById(R.id.articleIcon);
+
 		/*
 		 * Attempts to get either an Id of an existing review or the object of
 		 * the article already retrieved for a new review
@@ -65,10 +75,10 @@ public class ReviewActivity extends Activity {
 		} else if (article != null) {
 			Common.log(5, TAG, "onCreate: will create new review");
 
-			String url = "http://" + Common.httpVariables.SERVER_IP + "/ContinenteReview/dimensions.php?article_id=" + article.getId();
+			String url = Common.httpVariables.DIMENSIONS_PREFIX + article.getId();
 			Common.log(5, TAG, "onCreate: will atempt to launch service to get content from url '" + url + "'");
-			
-			HTTPRequest myHttpThread = new HTTPRequest(httpThreadHandler, url, HTTPRequest.requestTypes.GET_DIMENSIONS);
+//			HTTPRequest myHttpThread = new HTTPRequest(httpRequestHandler, url, HTTPRequest.requestTypes.GET_DIMENSIONS);
+			HTTPRequest myHttpThread = new HTTPRequest(new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_DIMENSIONS);
 			myHttpThread.start();
 			dialog = ProgressDialog.show(this, "A ober informação", "a consultar...");
 			
@@ -175,18 +185,9 @@ public class ReviewActivity extends Activity {
 		Common.log(5, TAG, "showReview: will set bitmap");
 		Bitmap productBitmap = article.getImage();
 		if(productBitmap == null) {
-			Common.log(3, TAG, "showReview: article object did not contain image; will attempt to get from URL");
-			try {
-				URL url = new URL(Common.httpVariables.IMAGE_PREFIX + article.getImageURL());
-				InputStream is = (InputStream) url.getContent();
-				productBitmap = BitmapFactory.decodeStream(is);
-			} catch (Exception e) {
-				Common.log(1, TAG, "showReview: Erro no carregamento da imagem do artigo no link " + Common.httpVariables.IMAGE_PREFIX + article.getImageURL() + "\nErro e:" + e.getMessage());
-			}
-		}
-		if(productBitmap == null) {
-			ImageView i = (ImageView) findViewById(R.id.articleIcon);
-			i.setImageBitmap(productBitmap);
+			Common.log(1, TAG, "showReview: ERROR article object did not contain image; will attempt to get from URL");
+		} else {
+			imageView.setImageBitmap(productBitmap);
 		}
 		
 		Common.log(5, TAG, "showReview: will draw dimensions");
@@ -351,29 +352,64 @@ public class ReviewActivity extends Activity {
 		Common.log(5, TAG, "reviewComment: will exit");
 	}
 
-	public Handler httpThreadHandler = new Handler() {
+//	public Handler httpRequestHandler = new Handler() {
+//		public void handleMessage(android.os.Message msg) {
+//        	switch (msg.what) {
+//        	case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
+//        		responseStr = "Supplied value was not valid";
+//        		break;
+//        	case HTTPRequest.responseOutputs.FAILED_QUERY_FROM_INTERNET:
+//        		responseStr = "No answer from internet (connection or server down)";
+//        		break;
+//        	case HTTPRequest.responseOutputs.FAILED_GETTING_VALID_RESPONSE_FROM_QUERY:
+//        		responseStr = "Query return was empty";
+//        		break;
+//        	case HTTPRequest.responseOutputs.FAILED_PROCESSING_RETURNED_OBJECT:
+//        		responseStr = "Query was invalid (not compatible with expected result)";
+//        		break;
+//        	case HTTPRequest.responseOutputs.SUCCESS:
+//        		responseStr = "Retorno COM resultado"; 
+//        		newRevDims = (DimensionsList) msg.getData().getSerializable("response");
+//        		break;
+//        	}
+//        	if(dialog != null && dialog.isShowing())
+//        		dialog.dismiss();
+//        	showReview();
+//        };
+//    };
+	
+	
+	static class httpRequestHandler extends Handler {
+		WeakReference<ReviewActivity> outerClass;
+		
+		httpRequestHandler(ReviewActivity outerClass) {
+			this.outerClass = new WeakReference<ReviewActivity>(outerClass);
+		}
+		
+		@Override
 		public void handleMessage(android.os.Message msg) {
+			ReviewActivity outerClassLocalObj = outerClass.get();
         	switch (msg.what) {
         	case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
-        		responseStr = "Supplied value was not valid";
+        		outerClassLocalObj.responseStr = "Supplied value was not valid";
         		break;
         	case HTTPRequest.responseOutputs.FAILED_QUERY_FROM_INTERNET:
-        		responseStr = "No answer from internet (connection or server down)";
+        		outerClassLocalObj.responseStr = "No answer from internet (connection or server down)";
         		break;
         	case HTTPRequest.responseOutputs.FAILED_GETTING_VALID_RESPONSE_FROM_QUERY:
-        		responseStr = "Query return was empty";
+        		outerClassLocalObj.responseStr = "Query return was empty";
         		break;
         	case HTTPRequest.responseOutputs.FAILED_PROCESSING_RETURNED_OBJECT:
-        		responseStr = "Query was invalid (not compatible with expected result)";
+        		outerClassLocalObj.responseStr = "Query was invalid (not compatible with expected result)";
         		break;
         	case HTTPRequest.responseOutputs.SUCCESS:
-        		responseStr = "Retorno COM resultado"; 
-        		newRevDims = (DimensionsList) msg.getData().getSerializable("response");
+        		outerClassLocalObj.responseStr = "Retorno COM resultado"; 
+        		outerClassLocalObj.newRevDims = (DimensionsList) msg.getData().getSerializable("response");
         		break;
         	}
-        	if(dialog != null && dialog.isShowing())
-        		dialog.dismiss();
-        	showReview();
-        };
-    };
+        	if(outerClassLocalObj.dialog != null && outerClassLocalObj.dialog.isShowing())
+        		outerClassLocalObj.dialog.dismiss();
+        	outerClassLocalObj.showReview();
+        }
+    }
 }

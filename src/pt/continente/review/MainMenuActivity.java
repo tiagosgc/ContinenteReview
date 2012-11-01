@@ -155,7 +155,7 @@ public class MainMenuActivity extends Activity {
 	public void launchArticleFromEAN(String ean) {
 		Common.log(5, TAG, "launchArticleFromEAN: started");
 
-		String url = "http://" + Common.httpVariables.SERVER_IP + "/ContinenteReview/article.php?ean=" + ean;
+		String url = Common.httpVariables.ARTICLE_PREFIX + ean;
 		Common.log(5, TAG, "launchArticleFromEAN: will atempt to launch service to get content from url '" + url + "'");
 		
 		scannedArticle = null;
