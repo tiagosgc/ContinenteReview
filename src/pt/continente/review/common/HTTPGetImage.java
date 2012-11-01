@@ -63,8 +63,6 @@ public class HTTPGetImage extends Thread {
 			return;
 		}
 		
-		Common.log(1, TAG, "run: product bitmap height: " + productBitmap.getHeight());
-		
 		messageToParent.what = responseOutputs.SUCCESS;
 		messageToParent.obj = productBitmap;
 //		OLD WAY - Bundle messageData = new Bundle();

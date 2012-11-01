@@ -356,7 +356,7 @@ public class MainMenuActivity extends Activity {
         		break;
         	case HTTPRequest.responseOutputs.SUCCESS:
         		errorMsg = "Retorno COM resultado"; 
-        		outerClassLocalObj.scannedArticle = (Article) msg.getData().getSerializable("response");
+        		outerClassLocalObj.scannedArticle = (Article) msg.obj;
         		break;
         	}
         	if(outerClassLocalObj.dialog != null && outerClassLocalObj.dialog.isShowing())

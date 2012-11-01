@@ -2,6 +2,8 @@ package pt.continente.review.common;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -105,6 +107,7 @@ public class HTTPRequest extends Thread {
 			parentHandler.sendMessage(messageToParent);
 			return;
 		} else {
+			Common.log(5, TAG, "run: obteve resposta; vai tentar processar");
 			Document newDocument = null;
 			try {
 				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -117,30 +120,30 @@ public class HTTPRequest extends Thread {
 				newDocument = builder.parse(instream);
 				newDocument.normalizeDocument();
 				newDocument.normalize();
-				Bundle messageData = new Bundle();
-				
+
+				Common.log(5, TAG, "run: recebeu xml válido; vai verificar conteúdo");
 				Node node = newDocument.getDocumentElement().getChildNodes().item(0);
 				if (node.getNodeName().compareTo("error") == 0) {
 					messageToParent.what = responseOutputs.FAILED_OBJECT_NOT_FOUND;
+					Bundle messageData = new Bundle();
 					messageData.putString("errorMessage", node.getTextContent() );
 					messageToParent.setData(messageData);
 					parentHandler.sendMessage(messageToParent);
 					return;
 				}
 				
+				Common.log(5, TAG, "run: conteúdo é válido, vai processar");
 				switch (requestType) {
 				case requestTypes.GET_ARTICLE:
 					Article newArticle = HTTPRequest.getProductFromDoc(newDocument);
-					messageData.putSerializable("response", newArticle);
+					messageToParent.obj = newArticle;
 					break;
 				case requestTypes.GET_DIMENSIONS:
-					Common.log(5, TAG, "run: vai processar dimensões");
-					DimensionsList newDimList = getDimensionsFromDoc(newDocument);
-					messageData.putSerializable("response", newDimList);
+					List<Dimension> newDimList = getDimensionsFromDoc(newDocument);
+					messageToParent.obj = newDimList;
 					break; 
 				}
 				messageToParent.what = responseOutputs.SUCCESS;
-				messageToParent.setData(messageData);
 				parentHandler.sendMessage(messageToParent);
 			} catch (Exception e) {
 				Common.log(1, TAG, "run: ERROR processing the returned object - " + e.getMessage());
@@ -152,7 +155,7 @@ public class HTTPRequest extends Thread {
 		Common.log(5, TAG, "run: finished");
 	}
 
-	public static DimensionsList getDimensionsFromDoc(Document document) {
+	public static List<Dimension> getDimensionsFromDoc(Document document) {
 		Common.log(5, TAG, "getDimensions: started");
 	
 		if (document == null) {
@@ -162,7 +165,7 @@ public class HTTPRequest extends Thread {
 		Element root;
 		NodeList dimensions;
 		NodeList dimensionNodes;
-		DimensionsList returnList = new DimensionsList();
+		List<Dimension> returnList = new ArrayList<Dimension>();
 		
 		document.getDocumentElement().normalize();
 		root = document.getDocumentElement();

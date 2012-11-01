@@ -90,6 +90,7 @@ public class ReviewActivity extends Activity {
 					return;
 				}
 		    	long revIdTmp = revTab.findItem(article.getId());
+		    	//TODO se existir um review fechado vai retornar esse e devia criar um novo em vez disso
 		    	if (revIdTmp > 0) {
 					revId = revIdTmp;
 		    	}
@@ -97,7 +98,7 @@ public class ReviewActivity extends Activity {
 		}
 		
 		if (revId != -1) {
-			Common.log(5, TAG, "onResume: will create recover existing review");
+			Common.log(5, TAG, "onResume: will recover existing review");
 			int result = getDataFromExistingReview(revId);
 			if (result < 0) {
 				shutdownWithError(
@@ -245,25 +246,29 @@ public class ReviewActivity extends Activity {
 		Common.log(5, TAG, "addNewReview: started");
 		
     	SQLiteHelper dbHelper = new SQLiteHelper(this);
-    	
-    	/*
-    	 *  Add Article to Table
-    	 */
-    	ArticlesTable artTab;
+   	
+		/*
+		 *  Add Article to Table
+		 */
+		ArticlesTable artTab;
     	try {
 			artTab = new ArticlesTable(dbHelper);
 			artTab.open();
 		} catch (Exception e) {
-			Common.log(1, TAG, "addNewReview: could not open the table - " + e.getMessage());
+			Common.log(1, TAG, "addNewReview: could not open the Articles table - " + e.getMessage());
 			return false;
 		}
 		Common.log(5, TAG, "addNewReview: will add article");
-		//TODO capturar erro na adição à tabela
-    	artTab.addItem(article);
+		long artResult = artTab.addItem(article);
     	artTab.close();
+    	if(artResult <= 0) {
+			Common.log(1, TAG, "addNewReview: error adding new article to table (error '" + artResult + "')");
+    		return false;
+    	}
         Common.log(3, TAG, "addNewReview: created article '" + article.getName() + "'");
         
-    	/*
+
+        /*
     	 *  Add new Review to Table
     	 */
     	ReviewsTable revTab;
@@ -271,22 +276,80 @@ public class ReviewActivity extends Activity {
 			revTab = new ReviewsTable(dbHelper);
 			revTab.open();
 		} catch (Exception e) {
-			Common.log(1, TAG, "addNewReview: could not open the table - " + e.getMessage());
+			Common.log(1, TAG, "addNewReview: could not open the Reviews table - " + e.getMessage());
 			return false;
 		}
-    	// Não verifica se já existe review para este artigo porque só chega aqui se, no onResume, já verificou que não existe
+//		Não verifica se já existe review para este artigo porque só chega aqui se, no onResume, já verificou que não existe
 		Common.log(5, TAG, "addNewReview: review is new - will add");
-    	Review revTmp = new Review(-1, Common.revStates.WORK_IN_PROGRESS, article.getId(), null);
-		//TODO capturar erro na adição à tabela
-    	long revTmpId = revTab.addItem(revTmp);
-        Common.log(3, TAG, "addNewReview: created new review with ID '" + revTmpId + "'");
-    	revTab.close();
+		Review revTmp = new Review(-1, Common.revStates.WORK_IN_PROGRESS, article.getId(), null);
+		long revResult = revTab.addItem(revTmp);
+		revTab.close();
+		if(revResult <= 0) {
+			Common.log(1, TAG, "addNewReview: error adding new review to table (error '" + revResult + "')");
+			return false;
+		}
+		Common.log(3, TAG, "addNewReview: created new review with ID '" + revResult + "'");
 
-		//TODO adicionar dimensions e rev dimensions às tabelas
-    	
-    	
-    	
-    	
+
+        /*
+    	 *  Add Dimensions to Table
+    	 */
+    	DimensionsTable dimTab;
+    	try {
+    		dimTab = new DimensionsTable(dbHelper);
+    		dimTab.open();
+		} catch (Exception e) {
+			Common.log(1, TAG, "addNewReview: could not open the Dimensions table - " + e.getMessage());
+			return false;
+		}
+		Common.log(5, TAG, "addNewReview: will add new dimensions");
+		int errorCount = 0;
+		for (Dimension dim : dimensions) {
+			long dimResult = dimTab.addItem(dim);
+			if(dimResult == -2) {
+				Common.log(3, TAG, "addNewReview: dimension with ID '" + dim.getId() + "' already exists in the table and was not added");
+			} else if(dimResult <= 0) {
+				errorCount++;
+				Common.log(1, TAG, "addNewReview: ERROR adding new dimension to table (error '" + dimResult + "')");
+			}
+		}
+		dimTab.close();
+		if(errorCount > 0) {
+			Common.log(1, TAG, "addNewReview: could not add all the required dimensions ('" + errorCount + "' errors)");
+			return false;
+		}
+		Common.log(3, TAG, "addNewReview: created all required Dimensions (" + dimensions.size() + ")");
+
+        
+        /*
+    	 *  Add ReviewDimensions to Table
+    	 */
+		ReviewDimensionsTable revDimTab;
+    	try {
+    		revDimTab = new ReviewDimensionsTable(dbHelper);
+    		revDimTab.open();
+		} catch (Exception e) {
+			Common.log(1, TAG, "addNewReview: could not open the ReviewDimensions table - " + e.getMessage());
+			return false;
+		}
+		Common.log(5, TAG, "addNewReview: will add new dimensions");
+		errorCount = 0;
+		for (Dimension dim : dimensions) {
+			long revDimResult = revDimTab.addItem(revResult, dim.getId());
+			if(revDimResult == -1) {
+				Common.log(3, TAG, "addNewReview: dimension with ID '" + dim.getId() + "' already exists in the table and was not added");
+			} else if(revDimResult <= 0) {
+				errorCount++;
+				Common.log(1, TAG, "addNewReview: ERROR adding new reviewDimension to table (error '" + revDimResult + "')");
+			}
+		}
+		revDimTab.close();
+		if(errorCount > 0) {
+			Common.log(1, TAG, "addNewReview: could not add all the required ReviewDimensions ('" + errorCount + "' errors)");
+			return false;
+		}
+		Common.log(3, TAG, "addNewReview: created all required ReviewDimensions (" + dimensions.size() + ")");
+
 		Common.log(5, TAG, "addNewReview: finished");
 		return true;
 	}
@@ -398,7 +461,7 @@ public class ReviewActivity extends Activity {
 		public void handleMessage(android.os.Message msg) {
 			ReviewActivity outerClassLocalObj = outerClass.get();
 			String errorMsg = null;
-			DimensionsList newRevDims = null;
+			List<Dimension> newRevDims = null;
 
 			switch (msg.what) {
         	case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
@@ -418,7 +481,7 @@ public class ReviewActivity extends Activity {
         		errorMsg = "Could not find dimensions for this article (" + serverErrorMsg + ")";
         		break;
         	case HTTPRequest.responseOutputs.SUCCESS:
-        		newRevDims = (DimensionsList) msg.getData().getSerializable("response");
+        		newRevDims = (List<Dimension>) msg.obj;
         		break;
         	}
 			
@@ -434,6 +497,7 @@ public class ReviewActivity extends Activity {
     					"httpRequestHandler: ERROR - received dimensions where null",
     					"Error obtaining information for Article review; cannot continue");
         	} else {
+        		outerClassLocalObj.dimensions = newRevDims;
         		outerClassLocalObj.addNewReview();
         	}
         }

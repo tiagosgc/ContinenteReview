@@ -94,7 +94,7 @@ public class ArticleActivity extends Activity {
 				Bitmap articleBitmap = (Bitmap) msg.obj;
 				if(articleBitmap != null) {
 					imageView.setImageBitmap(articleBitmap);
-					article.setImage(articleBitmap);
+					//article.setImage(articleBitmap);
 				} else {
 					Common.log(1, TAG, "imageThreadHandler: ERROR retrieved image but was null");
 					Common.longToast(context, "Error loading image");
