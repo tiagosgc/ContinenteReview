@@ -336,26 +336,32 @@ public class MainMenuActivity extends Activity {
 		@Override
 		public void handleMessage(android.os.Message msg) {
 			MainMenuActivity outerClassLocalObj = outerClass.get();
+			String errorMsg = null;
 			switch (msg.what) {
         	case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
-        		outerClassLocalObj.responseStr = "Supplied value was not valid";
+        		errorMsg = "Supplied value was not valid";
         		break;
         	case HTTPRequest.responseOutputs.FAILED_QUERY_FROM_INTERNET:
-        		outerClassLocalObj.responseStr = "No answer from internet (connection or server down)";
+        		errorMsg = "No answer from internet (connection or server down)";
         		break;
         	case HTTPRequest.responseOutputs.FAILED_GETTING_VALID_RESPONSE_FROM_QUERY:
-        		outerClassLocalObj.responseStr = "Query return was empty";
+        		errorMsg = "Query return was empty";
         		break;
         	case HTTPRequest.responseOutputs.FAILED_PROCESSING_RETURNED_OBJECT:
-        		outerClassLocalObj.responseStr = "Query was invalid (not compatible with expected result)";
+        		errorMsg = "Query was invalid (not compatible with expected result)";
+        		break;
+        	case HTTPRequest.responseOutputs.FAILED_OBJECT_NOT_FOUND:
+        		String serverErrorMsg = msg.getData().getString("errorMessage");
+        		errorMsg = "Could not find dimensions for this article (" + serverErrorMsg + ")";
         		break;
         	case HTTPRequest.responseOutputs.SUCCESS:
-        		outerClassLocalObj.responseStr = "Retorno COM resultado"; 
+        		errorMsg = "Retorno COM resultado"; 
         		outerClassLocalObj.scannedArticle = (Article) msg.getData().getSerializable("response");
         		break;
         	}
         	if(outerClassLocalObj.dialog != null && outerClassLocalObj.dialog.isShowing())
         		outerClassLocalObj.dialog.dismiss();
+        	outerClassLocalObj.responseStr = errorMsg;
         	outerClassLocalObj.launchArticleActivity();
         }
     }

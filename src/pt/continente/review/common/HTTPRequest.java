@@ -17,9 +17,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -44,7 +41,7 @@ public class HTTPRequest extends Thread {
 		public final static int FAILED_QUERY_FROM_INTERNET = 12;
 		public final static int FAILED_GETTING_VALID_RESPONSE_FROM_QUERY = 13;
 		public final static int FAILED_PROCESSING_RETURNED_OBJECT = 14;
-		public final static int FAILED_OBJECT_NOT_FOUND = 14;
+		public final static int FAILED_OBJECT_NOT_FOUND = 15;
 	}
 
 	public HTTPRequest(Handler parentHandler, String url, int requestType) {
@@ -69,8 +66,10 @@ public class HTTPRequest extends Thread {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 		messageToParent.what = 0;
 		response = null;
+		
 		HttpGet httpGet = null;
 		try {
 			httpGet = new HttpGet(urlBeingSought);
@@ -88,13 +87,12 @@ public class HTTPRequest extends Thread {
 		try {
 			response = client.execute(httpGet, localContext);
 		} catch (ClientProtocolException e) {
-
 			messageToParent.what = responseOutputs.FAILED_QUERY_FROM_INTERNET;
 		} catch (IOException e) {
 			messageToParent.what = responseOutputs.FAILED_QUERY_FROM_INTERNET;
 		} catch (Exception e) {
-			e.printStackTrace();
 			messageToParent.what = responseOutputs.FAILED_QUERY_FROM_INTERNET;
+			e.printStackTrace();
 		}
 
 		if (messageToParent.what != 0) {
@@ -120,6 +118,7 @@ public class HTTPRequest extends Thread {
 				newDocument.normalizeDocument();
 				newDocument.normalize();
 				Bundle messageData = new Bundle();
+				
 				Node node = newDocument.getDocumentElement().getChildNodes().item(0);
 				if (node.getNodeName().compareTo("error") == 0) {
 					messageToParent.what = responseOutputs.FAILED_OBJECT_NOT_FOUND;

@@ -123,10 +123,6 @@ public class ReviewActivity extends Activity {
 	private void showReview() {
 		Common.log(5, TAG, "onCreate: will set text info in activity");
 		
-//		if (revId == -1 && article != null) {
-//			addNewReview();
-//		}
-		
 		if (review == null || article == null || dimensions == null) {
 			shutdownWithError(
 					"showReview: ERROR no valid source to update view; cannot continue",
@@ -262,6 +258,7 @@ public class ReviewActivity extends Activity {
 			return false;
 		}
 		Common.log(5, TAG, "addNewReview: will add article");
+		//TODO capturar erro na adição à tabela
     	artTab.addItem(article);
     	artTab.close();
         Common.log(3, TAG, "addNewReview: created article '" + article.getName() + "'");
@@ -279,14 +276,16 @@ public class ReviewActivity extends Activity {
 		}
     	// Não verifica se já existe review para este artigo porque só chega aqui se, no onResume, já verificou que não existe
 		Common.log(5, TAG, "addNewReview: review is new - will add");
-    	Review revTmp;
-    	revTmp = new Review(-1, Common.revStates.WORK_IN_PROGRESS, article.getId(), null);
+    	Review revTmp = new Review(-1, Common.revStates.WORK_IN_PROGRESS, article.getId(), null);
+		//TODO capturar erro na adição à tabela
     	long revTmpId = revTab.addItem(revTmp);
         Common.log(3, TAG, "addNewReview: created new review with ID '" + revTmpId + "'");
     	revTab.close();
-		Common.log(5, TAG, "addNewReview: will exit");
-    	if (revTmpId < 0)
-    		return false;
+
+		//TODO adicionar dimensions e rev dimensions às tabelas
+    	
+    	
+    	
     	
 		Common.log(5, TAG, "addNewReview: finished");
 		return true;
@@ -413,6 +412,10 @@ public class ReviewActivity extends Activity {
         		break;
         	case HTTPRequest.responseOutputs.FAILED_PROCESSING_RETURNED_OBJECT:
         		errorMsg = "Query was invalid (not compatible with expected result)";
+        		break;
+        	case HTTPRequest.responseOutputs.FAILED_OBJECT_NOT_FOUND:
+        		String serverErrorMsg = msg.getData().getString("errorMessage");
+        		errorMsg = "Could not find dimensions for this article (" + serverErrorMsg + ")";
         		break;
         	case HTTPRequest.responseOutputs.SUCCESS:
         		newRevDims = (DimensionsList) msg.getData().getSerializable("response");
