@@ -1,8 +1,6 @@
 package pt.continente.review.common;
 
-import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.net.URL;
 import java.util.List;
 
 import pt.continente.review.R;
@@ -15,11 +13,9 @@ import pt.continente.review.tables.SQLiteHelper;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Gravity;
@@ -36,7 +32,6 @@ import android.widget.Toast;
 public class ReviewActivity extends Activity {
 	private static final String TAG = "CntRev - ReviewActivity";
 
-	private static Context context;
 	private static ImageView imageView;
 
 	private Article article = null; 
@@ -53,7 +48,6 @@ public class ReviewActivity extends Activity {
 		Common.log(5, TAG, "onCreate: started");
 		setContentView(R.layout.activity_review);
 		
-		context = this;
 		imageView = (ImageView) findViewById(R.id.articleIcon);
 
 		/*
@@ -77,9 +71,7 @@ public class ReviewActivity extends Activity {
 
 			String url = Common.httpVariables.DIMENSIONS_PREFIX + article.getId();
 			Common.log(5, TAG, "onCreate: will atempt to launch service to get content from url '" + url + "'");
-//			HTTPRequest myHttpThread = new HTTPRequest(httpRequestHandler, url, HTTPRequest.requestTypes.GET_DIMENSIONS);
-			HTTPRequest myHttpThread = new HTTPRequest(new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_DIMENSIONS);
-			myHttpThread.start();
+			(new HTTPRequest(new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_DIMENSIONS)).start();
 			dialog = ProgressDialog.show(this, "A ober informação", "a consultar...");
 			
 		} else {
@@ -352,33 +344,6 @@ public class ReviewActivity extends Activity {
 		Common.log(5, TAG, "reviewComment: will exit");
 	}
 
-//	public Handler httpRequestHandler = new Handler() {
-//		public void handleMessage(android.os.Message msg) {
-//        	switch (msg.what) {
-//        	case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
-//        		responseStr = "Supplied value was not valid";
-//        		break;
-//        	case HTTPRequest.responseOutputs.FAILED_QUERY_FROM_INTERNET:
-//        		responseStr = "No answer from internet (connection or server down)";
-//        		break;
-//        	case HTTPRequest.responseOutputs.FAILED_GETTING_VALID_RESPONSE_FROM_QUERY:
-//        		responseStr = "Query return was empty";
-//        		break;
-//        	case HTTPRequest.responseOutputs.FAILED_PROCESSING_RETURNED_OBJECT:
-//        		responseStr = "Query was invalid (not compatible with expected result)";
-//        		break;
-//        	case HTTPRequest.responseOutputs.SUCCESS:
-//        		responseStr = "Retorno COM resultado"; 
-//        		newRevDims = (DimensionsList) msg.getData().getSerializable("response");
-//        		break;
-//        	}
-//        	if(dialog != null && dialog.isShowing())
-//        		dialog.dismiss();
-//        	showReview();
-//        };
-//    };
-	
-	
 	static class httpRequestHandler extends Handler {
 		WeakReference<ReviewActivity> outerClass;
 		
