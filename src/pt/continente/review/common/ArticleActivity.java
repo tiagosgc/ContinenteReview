@@ -53,7 +53,7 @@ public class ArticleActivity extends Activity {
 		} else {
 			imageView.setImageBitmap(articleImage);
 		}
-		Common.log(5, TAG, "onCreate: finished");
+		Common.log(7, TAG, "onCreate: finished");
 	}
 
 	@Override
