@@ -10,6 +10,7 @@ import pt.continente.review.tables.ArticlesTable;
 import pt.continente.review.tables.ReviewsTable;
 import pt.continente.review.tables.SQLiteHelper;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -26,6 +27,7 @@ public class ReviewsListActivity extends Activity {
 	private SQLiteHelper dbHelper;
 	private ReviewsTable revsTable;
 	private ArticlesTable artsTable;
+	private Context context = this;
 	
 	
     @Override
@@ -79,7 +81,8 @@ public class ReviewsListActivity extends Activity {
         lv.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                launchReview(id);
+                Common.shortToast(context, "This review has been submited");
+                //TODO criar capacidade de READ-ONLY de um review
             }
         });
     }
@@ -87,6 +90,12 @@ public class ReviewsListActivity extends Activity {
     @Override
 	protected void onResume() {
         Common.log(5, TAG, "onResume: started");
+        adapterPending.deleteAllItems();
+        adapterPending.notifyDataSetChanged();
+        adapterWIP.deleteAllItems();
+        adapterWIP.notifyDataSetChanged();
+        adapterComplete.deleteAllItems();
+        adapterComplete.notifyDataSetChanged();
         try {
 			revsTable.open();
 		} catch (Exception e) {

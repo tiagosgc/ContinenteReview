@@ -95,7 +95,6 @@ public class ReviewImagesTable {
 	 * <b>-2</b> if there was a general error adding to the table
 	 */
 	public long addItem(ReviewImage item) {
-		
 		Common.log(5, TAG, "addItem: entrou");
 		
 		if (item.isFullyDefined()) {

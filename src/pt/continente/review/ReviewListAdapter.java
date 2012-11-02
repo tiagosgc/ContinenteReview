@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import pt.continente.review.common.Common;
 import android.content.Context;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -78,6 +79,8 @@ public class ReviewListAdapter extends BaseAdapter {
 		TextView view = new TextView(mContext);
 		view.setText(revArtNames.get(position));
 		view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+		view.setHeight(Common.pixelsFromDPs(mContext, 48));
+		view.setGravity(Gravity.CENTER_VERTICAL);
 		return view;
 	}
 

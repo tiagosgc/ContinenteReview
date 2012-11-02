@@ -42,7 +42,7 @@ public class ArticleActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		Common.log(5, TAG, "onCreate: started");
+		Common.log(5, TAG, "onResume: started");
 
 		if (article == null) {
 			finish();
@@ -68,12 +68,14 @@ public class ArticleActivity extends Activity {
 			imageView.setImageBitmap(articleImage);
 		}
 
-		Common.log(5, TAG, "onCreate: finished");
+		Common.log(5, TAG, "onResume: finished");
 	}
 
 	public void startReview(View view)
 	{
 		Intent intent = new Intent(this, ReviewActivity.class);
+		intent.putExtra("ArticleImage", article.getImage());
+		article.setImage(null);
 		intent.putExtra("Article", article);
 		startActivity(intent);
 	}
@@ -95,7 +97,7 @@ public class ArticleActivity extends Activity {
 				Bitmap articleBitmap = (Bitmap) msg.obj;
 				if(articleBitmap != null) {
 					imageView.setImageBitmap(articleBitmap);
-					//article.setImage(articleBitmap);
+					article.setImage(articleBitmap);
 				} else {
 					Common.log(1, TAG, "imageThreadHandler: ERROR retrieved image but was null");
 					Common.longToast(context, "Error loading image");

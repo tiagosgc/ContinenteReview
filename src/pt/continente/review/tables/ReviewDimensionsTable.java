@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import pt.continente.review.common.Common;
+import pt.continente.review.common.ReviewDimension;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -27,57 +28,88 @@ public class ReviewDimensionsTable {
 	public static final String TABLE_NAME = "ReviewDimensions";
 	public static final String COLUMN_REVIEW_ID = "review_id";
 	public static final String COLUMN_DIMENSION_ID = "dimension_id";
-	public static final int COLUMN_COUNT = 2;
+	public static final String COLUMN_REVIEW_DIMENSION_VALUE = "review_dimension_value";
+	public static final int COLUMN_COUNT = 3;
 	
 	// Database fields
 	private SQLiteDatabase database;
+	private boolean usingExternalDB = false;
 	private SQLiteHelper dbHelper;
 	private String[] allColumns = {
 			COLUMN_REVIEW_ID,
-			COLUMN_DIMENSION_ID
+			COLUMN_DIMENSION_ID,
+			COLUMN_REVIEW_DIMENSION_VALUE
 			};
 	
 	
 	
 	
 	public ReviewDimensionsTable(SQLiteHelper helper) throws Exception {
+		this(helper, null);
+	}
+		
+	public ReviewDimensionsTable(SQLiteHelper helper, SQLiteDatabase originDB) throws Exception {
 		try {
 			dbHelper = helper;
+			database = originDB;
+			if(originDB != null)
+				usingExternalDB = true;
 		} catch (SQLException e) {
-			Log.i(TAG, "DimensionsTable: error opening the DB helper - " + e.getMessage());
+			Log.i(TAG, "ReviewDimensionsTable: error opening the DB helper - " + e.getMessage());
 			throw new Exception(exceptions.DB_HELPER_ERROR);
 		}
 	}
 	
 	
 	public void open() throws Exception {
-		try {
-			database = dbHelper.getWritableDatabase();
-		} catch (SQLiteException e) {
-			Log.i(TAG, "open: error getting writable database - " + e.getMessage());
-			throw new Exception(exceptions.WRITABLE_DB_ERROR);
+		if(!usingExternalDB) {
+			try {
+				database = dbHelper.getWritableDatabase();
+			} catch (SQLiteException e) {
+				Log.i(TAG, "open: error getting writable database - " + e.getMessage());
+				throw new Exception(exceptions.WRITABLE_DB_ERROR);
+			}
 		}
 	}	
 	
 	public void close() {
-		database.close();
+		if(!usingExternalDB) {
+			database.close();
+		}
 	}
 	
 	
 	
 	
-	public List<Long> getAllItemsOfReview(long itemId) {
+	public List<ReviewDimension> getAllItemsOfReview(long itemId) {
+		Common.log(5, TAG, "getAllItemsOfReview: entrou");
 
-		List<Long> item = new ArrayList<Long>();
+		List<ReviewDimension> items = new ArrayList<ReviewDimension>();
 	
 	    Cursor cursor = database.query(TABLE_NAME, allColumns, COLUMN_REVIEW_ID + "=" + itemId, null, null, null, null);
 	    
+	    int cursorRows = cursor.getCount();
+
+	    if (cursorRows <= 0) {
+	    	Common.log(1, TAG, "getItem: no line found with Id " + itemId);
+	    	return null;
+	    }
+	    
+	    Common.log(5, TAG, "getAllItemsOfReview: obteve '" + cursorRows + "' registos da BD");
     	cursor.moveToNext();
     	while (!cursor.isAfterLast()) {
-    		item.add(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DIMENSION_ID)));
+    		ReviewDimension revDimTmp = new ReviewDimension(
+    				cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_REVIEW_ID)),
+    				cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DIMENSION_ID)),
+    				cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_REVIEW_DIMENSION_VALUE))
+    				);
+    		items.add(revDimTmp);
+        	cursor.moveToNext();
     	}
 	    cursor.close();
-	    return item;
+	    
+		Common.log(5, TAG, "getAllItemsOfReview: finished");
+	    return items;
 	}
 
 	
@@ -87,11 +119,10 @@ public class ReviewDimensionsTable {
 	 * <b>-1</b> if there is already a line for this pair of items<br>
 	 * <b>-2</b> if there was a general error adding to the table
 	 */
-	public long addItem(long revId, long dimId) {
-		
+	public long addItem(ReviewDimension item) {
 		Common.log(5, TAG, "addItem: entrou");
 
-		if (findItem(revId, dimId) != -1) {
+		if (findItem(item.getRevId(), item.getDimId()) != -1) {
 			Common.log(1, TAG, "addItem: an item for same content already exists");
 			return -1;
 		}
@@ -99,8 +130,9 @@ public class ReviewDimensionsTable {
 		
 		ContentValues values = new ContentValues();
 	    
-	    values.put(COLUMN_REVIEW_ID, revId);
-	    values.put(COLUMN_DIMENSION_ID, dimId);
+	    values.put(COLUMN_REVIEW_ID, item.getRevId());
+	    values.put(COLUMN_DIMENSION_ID, item.getDimId());
+	    values.put(COLUMN_REVIEW_DIMENSION_VALUE, item.getValue());
 		
 		Common.log(5, TAG, "addItem: vai tentar carregar registo na db");
 	    long newItemId = database.insert(TABLE_NAME, null, values);
@@ -114,9 +146,35 @@ public class ReviewDimensionsTable {
 	}
 	
 
-	public int deleteAllItemsOfReview (long itemId) {
-		int rowsAffected = database.delete(TABLE_NAME, COLUMN_REVIEW_ID + "=" + itemId, null);
-		Common.log(5, TAG, "deleteDevice: deleted " + rowsAffected + " rows with deviceId " + itemId);
+
+	public boolean updateItem(ReviewDimension item) {
+		
+		if (findItem(item.getRevId(), item.getDimId()) != 1) {
+			Log.i(TAG, "updateDevice: expected at least and only one row to be found, but didn't");
+			return false;
+		}
+		
+	    ContentValues values = new ContentValues();
+	    
+	    values.put(COLUMN_REVIEW_ID, item.getRevId());
+	    values.put(COLUMN_DIMENSION_ID, item.getDimId());
+	    values.put(COLUMN_REVIEW_DIMENSION_VALUE, item.getValue());
+		
+	    int recordsAffected = database.update(TABLE_NAME, values, COLUMN_REVIEW_ID + "=" + item.getRevId() + " AND " + COLUMN_DIMENSION_ID + "=" + item.getDimId(), null);
+	    if(recordsAffected <= 0) {
+	    	Common.log(1, TAG, "updateDevice: couldn't update row with revId '" + item.getRevId() + "' and dimId '" + item.getDimId() + "'");
+			return false;
+	    } else if(recordsAffected > 1) {
+	    	Common.log(3, TAG, "updateDevice: more than one line has been changed for revId '" + item.getRevId() + "' and dimId '" + item.getDimId() + "'");
+	    }
+	    
+	    return true;
+	}
+
+	
+	public int deleteAllItemsOfReview (long revId) {
+		int rowsAffected = database.delete(TABLE_NAME, COLUMN_REVIEW_ID + "=" + revId, null);
+		Common.log(5, TAG, "deleteDevice: deleted " + rowsAffected + " rows with deviceId " + revId);
 		return rowsAffected;
 	}
 
