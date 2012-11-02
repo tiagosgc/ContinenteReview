@@ -34,6 +34,7 @@ public class ReviewsTable {
 	
 	// Database fields
 	private SQLiteDatabase database;
+	private boolean usingExternalDB = false;
 	private SQLiteHelper dbHelper;
 	private String[] allColumns = {
 			COLUMN_REVIEW_ID,
@@ -46,8 +47,15 @@ public class ReviewsTable {
 	
 	
 	public ReviewsTable(SQLiteHelper helper) throws Exception {
+		this(helper, null);
+	}
+		
+	public ReviewsTable(SQLiteHelper helper, SQLiteDatabase originDB) throws Exception {
 		try {
 			dbHelper = helper;
+			database = originDB;
+			if(originDB != null)
+				usingExternalDB = true;
 		} catch (SQLException e) {
 			Log.i(TAG, "ReviewsTable: error opening the DB helper - " + e.getMessage());
 			throw new Exception(exceptions.DB_HELPER_ERROR);
@@ -56,16 +64,20 @@ public class ReviewsTable {
 	
 	
 	public void open() throws Exception {
-		try {
-			database = dbHelper.getWritableDatabase();
-		} catch (SQLiteException e) {
-			Log.i(TAG, "open: error getting writable database - " + e.getMessage());
-			throw new Exception(exceptions.WRITABLE_DB_ERROR);
+		if(!usingExternalDB) {
+			try {
+				database = dbHelper.getWritableDatabase();
+			} catch (SQLiteException e) {
+				Log.i(TAG, "open: error getting writable database - " + e.getMessage());
+				throw new Exception(exceptions.WRITABLE_DB_ERROR);
+			}
 		}
 	}	
 	
 	public void close() {
-		database.close();
+		if(!usingExternalDB) {
+			database.close();
+		}
 	}
 	
 	
@@ -175,7 +187,6 @@ public class ReviewsTable {
 	 * <b>-3</b> if there was a general error adding to the table
 	 */
 	public long addItem(Review item) {
-		
 		Common.log(5, TAG, "addItem: entrou");
 
 		if (!item.isFullyDefinedExceptId()) {
@@ -183,9 +194,8 @@ public class ReviewsTable {
 			return -1;
 		}
 		
-		Common.log(5, TAG, "addItem: vai procurar o device");
-
-		if (findItem(item.getArticleId()) != -1) {
+		Common.log(5, TAG, "addItem: vai verificar se o item já existe na tabela");
+		if (findItemFromActive(item.getArticleId()) != -1) {
 			Common.log(1, TAG, "addItem: an item for same content already exists");
 			return -2;
 		}
@@ -208,25 +218,26 @@ public class ReviewsTable {
 	}
 	
 
-	public boolean updateItem(Review existingItem, Review newItem) {
+	public boolean updateItem(Review item) {
+		Common.log(5, TAG, "updateItem: started");
 		
-		if (!existingItem.isFullyDefined() || !newItem.isFullyDefinedExceptId()) {
-			Log.i(TAG, "updateAction: the supplied devices are not defined as expected");
+		if (!item.isFullyDefined()) {
+			Log.i(TAG, "updateAction: the supplied item is not defined as expected");
 			return false;
 		}
 		
-		long itemIdToUpdate = existingItem.getId();
+		long itemIdToUpdate = item.getId();
 		
-		if (findItem(newItem.getArticleId()) != itemIdToUpdate) {
+		if (findItemFromActive(item.getArticleId()) != itemIdToUpdate) {
 			Log.i(TAG, "updateDevice: the update would generate duplicate devices");
 			return false;
 		}
 		
 	    ContentValues values = new ContentValues();
 	    
-	    values.put(COLUMN_REVIEW_STATE, newItem.getState());
-	    values.put(COLUMN_REVIEW_ARTICLE_ID, newItem.getArticleId());
-	    values.put(COLUMN_REVIEW_COMMENT, newItem.getComment());
+	    values.put(COLUMN_REVIEW_STATE, item.getState());
+	    values.put(COLUMN_REVIEW_ARTICLE_ID, item.getArticleId());
+	    values.put(COLUMN_REVIEW_COMMENT, item.getComment());
 	    
 	    int recordsAffected = database.update(TABLE_NAME, values, COLUMN_REVIEW_ID + "=" + itemIdToUpdate, null);
 	    if(recordsAffected <= 0) {
@@ -236,6 +247,7 @@ public class ReviewsTable {
 	    	Common.log(3, TAG, "updateDevice: more than one line have been changed by Object with Id " + itemIdToUpdate);
 	    }
 	    
+		Common.log(5, TAG, "updateItem: finished successfuly");
 	    return true;
 	}
 	
@@ -346,20 +358,33 @@ public class ReviewsTable {
 	
 	
 	/**
-	 * @param deviceId
-	 * @param function
 	 * @return
-	 * A positive long representing a Device deviceId identifying the line that matches the input<br>
+	 * <b>ID</b> of the line that matches the input (if only one does)<br>
 	 * <b>-1</b> if no lines match the input<br>
-	 * <b>-2</b> if more than one line matches the input<br>
-	 * <b>-3</b> if only one device was found but couldn't create the KNXDevice object
+	 * <b>-2</b> if more than one line match the input<br>
+	 * <b>-3</b> if only one device was found but couldn't create the object in order to find the ID
 	 */
 	public long findItem(long itemId) {
-		
 		Common.log(5, TAG, "findItem: started");
+		return findItemBase(itemId, "");
+	}
+
+	/**
+	 * @return
+	 * <b>ID</b> of the line that matches the input (if only one does)<br>
+	 * <b>-1</b> if no lines match the input<br>
+	 * <b>-2</b> if more than one line match the input<br>
+	 * <b>-3</b> if only one device was found but couldn't create the object in order to find the ID
+	 */
+	public long findItemFromActive(long itemId) {
+		Common.log(5, TAG, "findItemFromActive: started");
+		return findItemBase(itemId, " AND " + COLUMN_REVIEW_STATE + "<" + Common.revStates.COMPLETED);
+	}
+
+	public long findItemBase(long itemId, String additionalConditions) {
 
 		Review newItem = null;
-	    Cursor cursor = database.query(TABLE_NAME, allColumns, COLUMN_REVIEW_ARTICLE_ID + "='" + itemId + "'", null, null, null, null);
+	    Cursor cursor = database.query(TABLE_NAME, allColumns, COLUMN_REVIEW_ARTICLE_ID + "='" + itemId + "'" + additionalConditions, null, null, null, null);
 	    
 		int cursorRows = cursor.getCount();
 		

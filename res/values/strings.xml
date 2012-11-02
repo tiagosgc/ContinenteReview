@@ -20,6 +20,7 @@
     <string name="title_activity_photos_management">Photos Management</string>
     <string name="button_reviewPhotos">Fotos</string>
     <string name="button_reviewComment">Comentário</string>
+    <string name="button_reviewSubmit">Submeter</string>
     <string name="menu_getSampleDimensions">getDimensions com 71</string>
     <string name="label_reviewCommentTitle">Comentário</string>
     <string name="label_reviewCommentMessage">Defina o comentário que pretende associar a este artigo</string>

@@ -11,6 +11,7 @@ import pt.continente.review.common.HTTPRequest;
 import pt.continente.review.common.IntentIntegrator;
 import pt.continente.review.common.IntentResult;
 import pt.continente.review.common.Review;
+import pt.continente.review.common.ReviewDimension;
 import pt.continente.review.tables.ArticlesTable;
 import pt.continente.review.tables.DimensionsTable;
 import pt.continente.review.tables.ReviewDimensionsTable;
@@ -279,13 +280,13 @@ public class MainMenuActivity extends Activity {
     	
     	Random rand = new Random();
     	if(rand.nextBoolean())
-    		revDimTab.addItem(revId, 26);
+    		revDimTab.addItem(new ReviewDimension(revId, 26, -1));
     	if(rand.nextBoolean())
-    		revDimTab.addItem(revId, 27);
+    		revDimTab.addItem(new ReviewDimension(revId, 27, -1));
     	if(rand.nextBoolean())
-    		revDimTab.addItem(revId, 28);
+    		revDimTab.addItem(new ReviewDimension(revId, 28, -1));
     	if(rand.nextBoolean())
-    		revDimTab.addItem(revId, 29);
+    		revDimTab.addItem(new ReviewDimension(revId, 29, -1));
     	
     	revDimTab.close();
     }
@@ -352,7 +353,7 @@ public class MainMenuActivity extends Activity {
         		break;
         	case HTTPRequest.responseOutputs.FAILED_OBJECT_NOT_FOUND:
         		String serverErrorMsg = msg.getData().getString("errorMessage");
-        		errorMsg = "Could not find dimensions for this article (" + serverErrorMsg + ")";
+        		errorMsg = "Could not find this article (" + serverErrorMsg + ")";
         		break;
         	case HTTPRequest.responseOutputs.SUCCESS:
         		errorMsg = "Retorno COM resultado"; 

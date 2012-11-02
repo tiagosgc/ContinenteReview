@@ -1,6 +1,8 @@
 package pt.continente.review.common;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import pt.continente.review.R;
@@ -13,11 +15,15 @@ import pt.continente.review.tables.SQLiteHelper;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
@@ -32,11 +38,13 @@ public class ReviewActivity extends Activity {
 	private static final String TAG = "CntRev - ReviewActivity";
 
 	private static ImageView imageView;
+	private Context context = this;
 
 	private static long revId;
 	private Article article = null;
 	private Review review = null; 
 	private List<Dimension> dimensions = null;
+	private List<ReviewDimension> reviewDimensions = null;
 
 	private ProgressDialog dialog;
 	
@@ -54,6 +62,13 @@ public class ReviewActivity extends Activity {
 		 */
 		revId = (long) getIntent().getLongExtra("revId", -1);
 		article = (Article) getIntent().getSerializableExtra("Article");
+		if(article != null) {
+			Bitmap artImg = (Bitmap) getIntent().getParcelableExtra("ArticleImage");
+			if(artImg == null)
+				Common.log(5, TAG, "onCreate: imagem obtida é nula");
+			article.setImage(artImg);
+		}
+		Common.log(5, TAG, "onCreate: finished");
 	}
 	
 	@Override
@@ -65,7 +80,11 @@ public class ReviewActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		Common.log(5, TAG, "onResume: started");
 		
+		dimensions = new ArrayList<Dimension>();
+		reviewDimensions = new ArrayList<ReviewDimension>();
+
 		/*
 		 * Must have at least one valid source
 		 */
@@ -89,7 +108,7 @@ public class ReviewActivity extends Activity {
 							"Error accessing local tables; cannot continue");
 					return;
 				}
-		    	long revIdTmp = revTab.findItem(article.getId());
+		    	long revIdTmp = revTab.findItemFromActive(article.getId());
 		    	//TODO se existir um review fechado vai retornar esse e devia criar um novo em vez disso
 		    	if (revIdTmp > 0) {
 					revId = revIdTmp;
@@ -98,8 +117,8 @@ public class ReviewActivity extends Activity {
 		}
 		
 		if (revId != -1) {
-			Common.log(5, TAG, "onResume: will recover existing review");
-			int result = getDataFromExistingReview(revId);
+			Common.log(5, TAG, "onResume: will recover existing review with Id '" + revId + "'");
+			int result = getDataFromExistingReview();
 			if (result < 0) {
 				shutdownWithError(
 						"onResume: ERROR getting information from DB; cannot continue (revId = '" + revId + "', result = '" + result + "'",
@@ -118,13 +137,21 @@ public class ReviewActivity extends Activity {
 			(new HTTPRequest(new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_DIMENSIONS)).start();
 			dialog = ProgressDialog.show(this, "A obter informação", "a consultar...");
 		}
+		
+		Common.log(5, TAG, "onResume: finished");
 	}
 	
 	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		reviewSave();
+	}
+
 	private void showReview() {
-		Common.log(5, TAG, "onCreate: will set text info in activity");
+		Common.log(5, TAG, "showReview: started");
 		
-		if (review == null || article == null || dimensions == null) {
+		if (review == null || article == null || dimensions == null || dimensions.isEmpty() || reviewDimensions == null || reviewDimensions.isEmpty()) {
 			shutdownWithError(
 					"showReview: ERROR no valid source to update view; cannot continue",
 					"Error getting data to present; cannot continue");
@@ -133,7 +160,7 @@ public class ReviewActivity extends Activity {
 		
 		TextView t = (TextView) findViewById(R.id.articleName);
 		t.setText(article.getName());
-
+		
 		Common.log(5, TAG, "showReview: will set bitmap");
 		Bitmap productBitmap = article.getImage();
 		if(productBitmap == null) {
@@ -162,80 +189,97 @@ public class ReviewActivity extends Activity {
 	 * <b>-3</b> if no dimensions were returned for current review<br>
 	 * <b>-4</b> if not all review dimensions were found in the Dimensions table
 	 */
-	private int getDataFromExistingReview(long revId) {
-		Common.log(5, TAG, "getDataFromRevId: started");
+	private int getDataFromExistingReview() {
+		Common.log(5, TAG, "getDataFromExistingReview: started");
     	SQLiteHelper dbHelper = new SQLiteHelper(this);
     	
+		/*
+		 *  Get Review from table
+		 */
     	ReviewsTable revTab;
     	try {
 			revTab = new ReviewsTable(dbHelper);
 			revTab.open();
 		} catch (Exception e) {
-			Common.log(1, TAG, "getDataFromRevId: could not open the Reviews table - " + e.getMessage());
+			Common.log(1, TAG, "getDataFromExistingReview: could not open the Reviews table - " + e.getMessage());
 			return -1;
 		}
     	review = revTab.getItem(revId);
     	revTab.close();
     	if (review == null) {
-    		Common.log(1, TAG, "getDataFromRevId: could not get Review from DB");
+    		Common.log(1, TAG, "getDataFromExistingReview: could not get Review from DB");
     		return -2;
     	}
-    	Common.log(5, TAG, "getDataFromRevId: built Review with Id '" + review.getId() + "'");
+    	Common.log(5, TAG, "getDataFromExistingReview: built Review with Id '" + review.getId() + "'");
     	
+    	
+		/*
+		 *  Get Article from table
+		 */
     	ArticlesTable artTab;
     	try {
 			artTab = new ArticlesTable(dbHelper);
 			artTab.open();
 		} catch (Exception e) {
-			Common.log(1, TAG, "getDataFromRevId: could not open the Articles table - " + e.getMessage());
+			Common.log(1, TAG, "getDataFromExistingReview: could not open the Articles table - " + e.getMessage());
 			return -1;
 		}
     	article = artTab.getItem(review.getArticleId());
     	artTab.close();
     	if (article == null) {
-    		Common.log(1, TAG, "getDataFromRevId: could not get Artcile from DB");
+    		Common.log(1, TAG, "getDataFromExistingReview: could not get Artcile from DB");
     		return -2;
     	}
-    	Common.log(5, TAG, "getDataFromRevId: built Article with Id '" + article.getId() + "'");
+    	Common.log(5, TAG, "getDataFromExistingReview: built Article with Id '" + article.getId() + "'");
     	
+
+		/*
+		 *  Get ReviewDimensions from table
+		 */
     	ReviewDimensionsTable revDimTab;
     	try {
     		revDimTab = new ReviewDimensionsTable(dbHelper);
     		revDimTab.open();
 		} catch (Exception e) {
-			Common.log(1, TAG, "getDataFromRevId: could not open the ReviewsDimensions table - " + e.getMessage());
+			Common.log(1, TAG, "getDataFromExistingReview: could not open the ReviewsDimensions table - " + e.getMessage());
 			return -1;
 		}
-    	List<Long> revDims = revDimTab.getAllItemsOfReview(review.getId());
+    	reviewDimensions = revDimTab.getAllItemsOfReview(review.getId());
     	revDimTab.close();
-    	if (revDims == null) {
-    		Common.log(1, TAG, "getDataFromRevId: could not get Reviews Dimensions from DB");
+    	if (reviewDimensions == null) {
+    		Common.log(1, TAG, "getDataFromExistingReview: could not get Reviews Dimensions from DB");
 			return -2;
     	}
-    	Common.log(5, TAG, "getDataFromRevId: got '" + revDims.size() + "' revDims from table");
-    	if (revDims.size() <= 0) {
-    		Common.log(1, TAG, "getDataFromRevId: could not find dimensions for this review");
+    	Common.log(5, TAG, "getDataFromExistingReview: got '" + reviewDimensions.size() + "' revDims from table");
+    	if (reviewDimensions.size() <= 0) {
+    		Common.log(1, TAG, "getDataFromExistingReview: could not find dimensions for this review");
     		return -3;
     	}
     	
+
+		/*
+		 *  Get Dimensions from table
+		 */
     	DimensionsTable dimTab;
     	try {
     		dimTab = new DimensionsTable(dbHelper);
     		dimTab.open();
 		} catch (Exception e) {
-			Common.log(1, TAG, "getDataFromRevId: could not open the Dimensions table - " + e.getMessage());
+			Common.log(1, TAG, "getDataFromExistingReview: could not open the Dimensions table - " + e.getMessage());
 			return -1;
 		}
-    	for(long revDim : revDims) {
-    		Dimension dimTmp = dimTab.getItem(revDim);
+    	Common.log(5, TAG, "getDataFromExistingReview: will fetch dimensions");
+    	for(ReviewDimension revDim : reviewDimensions) {
+    		Dimension dimTmp = dimTab.getItem(revDim.getDimId());
     		if (dimTmp != null) {
     			dimensions.add(dimTmp);
     		} else {
-    			Common.log(3, TAG, "getDataFromRevId: could not add Dimension with Id '" + revDim + "'");
+    			Common.log(3, TAG, "getDataFromExistingReview: could not add Dimension with Id '" + revDim + "'");
     		}
     	}
-    	Common.log(5, TAG, "getDataFromRevId: got '" + dimensions.size() + "' dimensions from table");
-    	if (revDims.size() != dimensions.size())
+    	dimTab.close();
+    	Common.log(5, TAG, "getDataFromExistingReview: got '" + dimensions.size() + "' dimensions from table");
+    	if (reviewDimensions.size() != dimensions.size())
     		return -4;
     	else
     		return 0;
@@ -245,38 +289,57 @@ public class ReviewActivity extends Activity {
 	private boolean addNewReview() {
 		Common.log(5, TAG, "addNewReview: started");
 		
-    	SQLiteHelper dbHelper = new SQLiteHelper(this);
+		SQLiteDatabase database;
+		SQLiteHelper dbHelper = new SQLiteHelper(this);
+		try {
+			database = dbHelper.getWritableDatabase();
+		} catch (SQLiteException e) {
+			Log.i(TAG, "addNewReview: error getting writable database - " + e.getMessage());
+			return false;
+		}
+		
+		database.beginTransaction();
    	
 		/*
 		 *  Add Article to Table
 		 */
 		ArticlesTable artTab;
     	try {
-			artTab = new ArticlesTable(dbHelper);
+			artTab = new ArticlesTable(dbHelper, database);
 			artTab.open();
 		} catch (Exception e) {
 			Common.log(1, TAG, "addNewReview: could not open the Articles table - " + e.getMessage());
+	        database.endTransaction();
+	        database.close();
 			return false;
 		}
 		Common.log(5, TAG, "addNewReview: will add article");
 		long artResult = artTab.addItem(article);
     	artTab.close();
     	if(artResult <= 0) {
-			Common.log(1, TAG, "addNewReview: error adding new article to table (error '" + artResult + "')");
-    		return false;
+    		if(artResult == -2) {
+				Common.log(5, TAG, "addNewReview: did not add article because already exists - OK");
+    		} else {
+				Common.log(1, TAG, "addNewReview: ERROR adding new article to table (error '" + artResult + "')");
+		        database.endTransaction();
+		        database.close();
+				return false;
+    		}
     	}
         Common.log(3, TAG, "addNewReview: created article '" + article.getName() + "'");
         
-
+        
         /*
     	 *  Add new Review to Table
     	 */
     	ReviewsTable revTab;
     	try {
-			revTab = new ReviewsTable(dbHelper);
+			revTab = new ReviewsTable(dbHelper, database);
 			revTab.open();
 		} catch (Exception e) {
 			Common.log(1, TAG, "addNewReview: could not open the Reviews table - " + e.getMessage());
+	        database.endTransaction();
+	        database.close();
 			return false;
 		}
 //		Não verifica se já existe review para este artigo porque só chega aqui se, no onResume, já verificou que não existe
@@ -286,8 +349,12 @@ public class ReviewActivity extends Activity {
 		revTab.close();
 		if(revResult <= 0) {
 			Common.log(1, TAG, "addNewReview: error adding new review to table (error '" + revResult + "')");
+	        database.endTransaction();
+	        database.close();
 			return false;
 		}
+		revTmp.setId(revResult);
+		review = revTmp;
 		Common.log(3, TAG, "addNewReview: created new review with ID '" + revResult + "'");
 
 
@@ -296,10 +363,12 @@ public class ReviewActivity extends Activity {
     	 */
     	DimensionsTable dimTab;
     	try {
-    		dimTab = new DimensionsTable(dbHelper);
+    		dimTab = new DimensionsTable(dbHelper, database);
     		dimTab.open();
 		} catch (Exception e) {
 			Common.log(1, TAG, "addNewReview: could not open the Dimensions table - " + e.getMessage());
+	        database.endTransaction();
+	        database.close();
 			return false;
 		}
 		Common.log(5, TAG, "addNewReview: will add new dimensions");
@@ -316,6 +385,8 @@ public class ReviewActivity extends Activity {
 		dimTab.close();
 		if(errorCount > 0) {
 			Common.log(1, TAG, "addNewReview: could not add all the required dimensions ('" + errorCount + "' errors)");
+	        database.endTransaction();
+	        database.close();
 			return false;
 		}
 		Common.log(3, TAG, "addNewReview: created all required Dimensions (" + dimensions.size() + ")");
@@ -326,16 +397,19 @@ public class ReviewActivity extends Activity {
     	 */
 		ReviewDimensionsTable revDimTab;
     	try {
-    		revDimTab = new ReviewDimensionsTable(dbHelper);
+    		revDimTab = new ReviewDimensionsTable(dbHelper, database);
     		revDimTab.open();
 		} catch (Exception e) {
 			Common.log(1, TAG, "addNewReview: could not open the ReviewDimensions table - " + e.getMessage());
+	        database.endTransaction();
+	        database.close();
 			return false;
 		}
 		Common.log(5, TAG, "addNewReview: will add new dimensions");
 		errorCount = 0;
 		for (Dimension dim : dimensions) {
-			long revDimResult = revDimTab.addItem(revResult, dim.getId());
+			ReviewDimension revDimTmp = new ReviewDimension(revResult, dim.getId(), -1);
+			long revDimResult = revDimTab.addItem(revDimTmp);
 			if(revDimResult == -1) {
 				Common.log(3, TAG, "addNewReview: dimension with ID '" + dim.getId() + "' already exists in the table and was not added");
 			} else if(revDimResult <= 0) {
@@ -343,13 +417,23 @@ public class ReviewActivity extends Activity {
 				Common.log(1, TAG, "addNewReview: ERROR adding new reviewDimension to table (error '" + revDimResult + "')");
 			}
 		}
+		reviewDimensions = revDimTab.getAllItemsOfReview(revResult);
 		revDimTab.close();
 		if(errorCount > 0) {
 			Common.log(1, TAG, "addNewReview: could not add all the required ReviewDimensions ('" + errorCount + "' errors)");
+	        database.endTransaction();
+	        database.close();
 			return false;
 		}
 		Common.log(3, TAG, "addNewReview: created all required ReviewDimensions (" + dimensions.size() + ")");
+		
 
+        database.setTransactionSuccessful();
+        database.endTransaction();
+        database.close();
+
+        showReview();
+		
 		Common.log(5, TAG, "addNewReview: finished");
 		return true;
 	}
@@ -362,12 +446,25 @@ public class ReviewActivity extends Activity {
 		
 		LinearLayout linLay = (LinearLayout) this.findViewById(R.id.mainLinLay);;
 
-		LinearLayout.LayoutParams linLayParams = new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+		LinearLayout.LayoutParams linLayParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
 		linLayParams.bottomMargin = Common.pixelsFromDPs(this, 20);
 		
 		LinearLayout.LayoutParams dimTxtParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 1f);
-
+		
+		/*
+		 * Build revDimValues HashMap to recover previous user choices
+		 */
+		HashMap<Long, Integer> revDimValues = new HashMap<Long, Integer>();
+		for (ReviewDimension revDim : reviewDimensions) {
+			revDimValues.put(revDim.getDimId(), revDim.getValue());
+		}
+		
+		SeekBar testSeekExistence;
 		for (Dimension dim : dimensions) {
+			testSeekExistence = (SeekBar) findViewById((int) dim.getId());
+			if(testSeekExistence != null)
+				continue;
+			
 			LinearLayout newLinLay = new LinearLayout(this);
 			newLinLay.setOrientation(LinearLayout.VERTICAL);
 			newLinLay.setLayoutParams(linLayParams);
@@ -378,6 +475,14 @@ public class ReviewActivity extends Activity {
 			SeekBar newBar = new SeekBar(this);
 			newBar.setId((int)dim.getId());
 			newBar.setMax(100);
+			newBar.setOnSeekBarChangeListener(new seekBarChangeListener());
+			
+			if(revDimValues.containsKey(dim.getId())) {
+				int value = revDimValues.get(dim.getId());
+				if(value >= 0 && value <= 100) {
+					newBar.setProgress(value);
+				}
+			}
 			
 			LinearLayout newLinLayClass = new LinearLayout(this);
 			newLinLayClass.setOrientation(LinearLayout.HORIZONTAL);
@@ -410,6 +515,100 @@ public class ReviewActivity extends Activity {
 			
 			linLay.addView(newLinLay);
 		}
+	}
+
+	private class seekBarChangeListener implements SeekBar.OnSeekBarChangeListener {
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            int changedBar = seekBar.getId();
+    		for (ReviewDimension revDim : reviewDimensions) {
+    			if(revDim.getDimId() == changedBar) {
+    				revDim.setValue(progress);
+    			}
+    		}
+        }
+        public void onStartTrackingTouch(SeekBar seekBar) {}
+        public void onStopTrackingTouch(SeekBar seekBar) {}
+    }
+	
+	private void reviewSave() {
+		Common.log(5, TAG, "reviewSave: started");
+		
+		if (review == null || reviewDimensions == null || reviewDimensions.isEmpty()) {
+			Common.log(5, TAG, "reviewSave: not enough data available to save the review");
+			return;
+		}
+		
+		SQLiteHelper dbHelper = new SQLiteHelper(this);
+
+		/*
+    	 *  Update Review in Table
+    	 */
+    	ReviewsTable revTab;
+    	try {
+			revTab = new ReviewsTable(dbHelper);
+			revTab.open();
+		} catch (Exception e) {
+			Common.log(1, TAG, "reviewSave: could not open the Reviews table - " + e.getMessage());
+			return;
+		}
+		boolean revResult = revTab.updateItem(review);
+		revTab.close();
+		Common.log(5, TAG, "reviewSave: updated com sucesso o review com ID '" + review.getId() + "'");
+
+		
+        /*
+    	 *  Update ReviewDimensions in Table
+    	 */
+		ReviewDimensionsTable revDimTab;
+    	try {
+    		revDimTab = new ReviewDimensionsTable(dbHelper);
+    		revDimTab.open();
+		} catch (Exception e) {
+			Common.log(1, TAG, "reviewSave: could not open the ReviewDimensions table - " + e.getMessage());
+			return;
+		}
+		int errorCount = 0;
+		for (ReviewDimension revDim : reviewDimensions) {
+			boolean revDimResult = revDimTab.updateItem(revDim);
+			if(revDimResult) {
+				Common.log(5, TAG, "reviewSave: alterado com sucesso o registo com revId '" + revDim.getRevId() + "' e dimId '" + revDim.getDimId() + "'");
+			} else {
+				errorCount++;
+				Common.log(1, TAG, "reviewSave: ERROR adding new reviewDimension to table (error '" + revDimResult + "')");
+			}
+		}
+		revDimTab.close();
+		
+		if(revResult && errorCount == 0) {
+			Common.log(5, TAG, "reviewSave: todos os updates realizados com sucesso");
+		} if(!revResult) {
+			Common.log(1, TAG, "reviewSave: dimensões atualizadas com sucesso mas review não");
+		} else {
+			Common.log(1, TAG, "reviewSave: review atualizado com sucesso mas dimensões não");
+		}
+
+		Common.log(5, TAG, "reviewSave: finished");
+	}
+
+	public void reviewSubmit(View view) {
+		AlertDialog.Builder alert = new AlertDialog.Builder(this);
+		alert.setTitle("Submeter Review");
+		alert.setMessage("Tem a certeza que pretende submeter este Review?");
+		alert.setPositiveButton("Submeter", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int whichButton) {
+				review.setState(Common.revStates.COMPLETED);
+				reviewSave();
+				Common.longToast(context, "Submission not yet implemented; just changed the state to COMPLETED");
+				finish();
+			}
+		});
+
+		alert.setNegativeButton("Voltar", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int whichButton) {
+			// Canceled.
+			}
+		});
+	alert.show();
 	}
 	
 	public void reviewPhotos(View view) {
@@ -457,11 +656,12 @@ public class ReviewActivity extends Activity {
 			this.outerClass = new WeakReference<ReviewActivity>(outerClass);
 		}
 		
+		@SuppressWarnings("unchecked")
 		@Override
 		public void handleMessage(android.os.Message msg) {
 			ReviewActivity outerClassLocalObj = outerClass.get();
 			String errorMsg = null;
-			List<Dimension> newRevDims = null;
+			List<Dimension> newDims = null;
 
 			switch (msg.what) {
         	case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
@@ -481,7 +681,7 @@ public class ReviewActivity extends Activity {
         		errorMsg = "Could not find dimensions for this article (" + serverErrorMsg + ")";
         		break;
         	case HTTPRequest.responseOutputs.SUCCESS:
-        		newRevDims = (List<Dimension>) msg.obj;
+        		newDims = (List<Dimension>) msg.obj;
         		break;
         	}
 			
@@ -492,12 +692,12 @@ public class ReviewActivity extends Activity {
         		outerClassLocalObj.shutdownWithError(
     					"httpRequestHandler: ERROR - " + errorMsg,
     					"Error obtaining information for Article review; cannot continue");
-        	} else if(newRevDims == null) {
+        	} else if(newDims == null) {
         		outerClassLocalObj.shutdownWithError(
     					"httpRequestHandler: ERROR - received dimensions where null",
     					"Error obtaining information for Article review; cannot continue");
         	} else {
-        		outerClassLocalObj.dimensions = newRevDims;
+        		outerClassLocalObj.dimensions = newDims;
         		outerClassLocalObj.addNewReview();
         	}
         }

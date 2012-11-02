@@ -26,20 +26,27 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="4dp"
             android:src="@android:drawable/sym_def_app_icon" />
-
+
         <TextView
             android:id="@+id/articleName"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="left|center_vertical"
             android:paddingLeft="10dp"
-            android:text="ID do Produto"
             android:textAppearance="?android:attr/textAppearanceMedium" />
+
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" >
+
+        <Button
+            android:id="@+id/saveReview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="reviewSubmit"
+            android:text="@string/button_reviewSubmit" />
 
         <Button
             android:id="@+id/buttonPhotos"

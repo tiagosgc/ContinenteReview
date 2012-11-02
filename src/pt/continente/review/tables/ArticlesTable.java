@@ -41,6 +41,7 @@ public class ArticlesTable {
 	
 	// Database fields
 	private SQLiteDatabase database;
+	private boolean usingExternalDB = false;
 	private SQLiteHelper dbHelper;
 	private String[] allColumns = {
 			COLUMN_ARTICLE_ID,
@@ -58,10 +59,16 @@ public class ArticlesTable {
 	
 	
 	
-	
 	public ArticlesTable(SQLiteHelper helper) throws Exception {
+		this(helper, null);
+	}
+		
+	public ArticlesTable(SQLiteHelper helper, SQLiteDatabase originDB) throws Exception {
 		try {
 			dbHelper = helper;
+			database = originDB;
+			if(originDB != null)
+				usingExternalDB = true;
 		} catch (SQLException e) {
 			Log.i(TAG, "ArticlesTable: error opening the DB helper - " + e.getMessage());
 			throw new Exception(exceptions.DB_HELPER_ERROR);
@@ -69,17 +76,22 @@ public class ArticlesTable {
 	}
 	
 	
+	
 	public void open() throws Exception {
-		try {
-			database = dbHelper.getWritableDatabase();
-		} catch (SQLiteException e) {
-			Log.i(TAG, "open: error getting writable database - " + e.getMessage());
-			throw new Exception(exceptions.WRITABLE_DB_ERROR);
+		if(!usingExternalDB) {
+			try {
+				database = dbHelper.getWritableDatabase();
+			} catch (SQLiteException e) {
+				Log.i(TAG, "open: error getting writable database - " + e.getMessage());
+				throw new Exception(exceptions.WRITABLE_DB_ERROR);
+			}
 		}
 	}	
 	
 	public void close() {
-		database.close();
+		if(!usingExternalDB) {
+			database.close();
+		}
 	}
 	
 	
@@ -143,7 +155,6 @@ public class ArticlesTable {
 	 * <b>-3</b> if there was a general error adding to the table
 	 */
 	public long addItem(Article item) {
-		
 		Common.log(5, TAG, "addItem: entrou");
 
 		if (!item.isFullyDefined()) {
@@ -151,8 +162,7 @@ public class ArticlesTable {
 			return -1;
 		}
 		
-		Common.log(5, TAG, "addItem: vai procurar o device");
-
+		Common.log(5, TAG, "addItem: vai verificar se o item já existe na tabela");
 		if (findItem(item.getEAN()) != -1) {
 			Common.log(1, TAG, "addItem: an item for same content already exists");
 			return -2;
@@ -336,13 +346,11 @@ public class ArticlesTable {
 	
 	
 	/**
-	 * @param deviceId
-	 * @param function
 	 * @return
-	 * A positive long representing a Device deviceId identifying the line that matches the input<br>
+	 * <b>1</b> if one line matches the input<br>
 	 * <b>-1</b> if no lines match the input<br>
-	 * <b>-2</b> if more than one line matches the input<br>
-	 * <b>-3</b> if only one device was found but couldn't create the KNXDevice object
+	 * <b>-2</b> if more than one line match the input<br>
+	 * <b>-3</b> if only one device was found but couldn't create the object in order to find the ID
 	 */
 	public long findItem(String itemEAN) {
 		

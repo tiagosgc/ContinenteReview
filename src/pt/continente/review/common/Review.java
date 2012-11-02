@@ -24,7 +24,7 @@ public class Review {
 		return revId;
 	}
 
-	private void setId(long rev_id) {
+	public void setId(long rev_id) {
 		this.revId = rev_id;
 	}
 
@@ -32,7 +32,7 @@ public class Review {
 		return revState;
 	}
 
-	private void setState(int rev_state) {
+	public void setState(int rev_state) {
 		this.revState = rev_state;
 	}
 
