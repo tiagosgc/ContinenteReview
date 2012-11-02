@@ -13,7 +13,7 @@ public class Article implements Serializable {
 	private String artDescription;
 	private String artEAN;
 	private double artPrice;
-	private String artImageURL;
+	private String artImageURL; 
 	
 	/*TODO Tiago: Este Bitmap tem que desaparecer, para termos um artigo veradeiramente serializable. 
 	 *Em vez disto passamos a ter um "nome de ficheiro", não nulo quando o bitmap já foi guardado

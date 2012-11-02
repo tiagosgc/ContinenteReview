@@ -54,6 +54,7 @@ public class ArticleActivity extends Activity {
 		t.setText(article.getName());
 
 		//TODO Tiago: Este Bitmap vai passar a ser uma leitura da memoria interna, em funcao de um nome guardado no objecto Article
+		
 		Bitmap articleImage = article.getImage();
 		if (articleImage == null) {
 			try {
