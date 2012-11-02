@@ -52,7 +52,7 @@ public class HTTPRequest extends Thread {
 		this.parentHandler = parentHandler;
 		this.requestType = requestType;
 	}
-
+	
 	@Override
 	public void run() {
 		super.run();
