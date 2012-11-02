@@ -5,7 +5,6 @@ import java.util.List;
 import pt.continente.review.common.Article;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.Review;
-import pt.continente.review.common.ReviewActivity;
 import pt.continente.review.tables.ArticlesTable;
 import pt.continente.review.tables.ReviewsTable;
 import pt.continente.review.tables.SQLiteHelper;

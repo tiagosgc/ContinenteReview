@@ -1,8 +1,10 @@
-package pt.continente.review.common;
+package pt.continente.review;
 
 import java.net.URL;
 
-import pt.continente.review.R;
+import pt.continente.review.common.Article;
+import pt.continente.review.common.Common;
+import pt.continente.review.common.HTTPGetImage;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -72,6 +74,18 @@ public class ArticleActivity extends Activity {
 		Common.log(5, TAG, "onResume: finished");
 	}
 
+//	@Override
+//	public boolean onOptionsItemSelected(MenuItem item) {
+//	    // Handle item selection
+//	    switch (item.getItemId()) {
+//	        case android.R.id.home:
+//	        	Common.longToast(this, "detected the return click");
+//	    		return true;  
+//	        default:
+//	            return super.onOptionsItemSelected(item);
+//	    }
+//	}
+	
 	public void startReview(View view)
 	{
 		Intent intent = new Intent(this, ReviewActivity.class);

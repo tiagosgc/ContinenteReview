@@ -4,12 +4,9 @@ import java.lang.ref.WeakReference;
 import java.util.Random;
 
 import pt.continente.review.common.Article;
-import pt.continente.review.common.ArticleActivity;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.Dimension;
 import pt.continente.review.common.HTTPRequest;
-import pt.continente.review.common.IntentIntegrator;
-import pt.continente.review.common.IntentResult;
 import pt.continente.review.common.Review;
 import pt.continente.review.common.ReviewDimension;
 import pt.continente.review.tables.ArticlesTable;
@@ -29,6 +26,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainMenuActivity extends Activity { 
@@ -41,13 +39,24 @@ public class MainMenuActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main_menu);
+		setContentView(R.layout.layout_home_screen);
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.activity_main_menu, menu);
 		return true;
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		
+		int currentVersion = android.os.Build.VERSION.SDK_INT;
+		if(currentVersion >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+			TextView textView = (TextView) findViewById(R.id.titleOldHeader);
+			textView.setVisibility(TextView.GONE);
+		}
 	}
 
 	public void reviewHistory(View view) {
@@ -161,7 +170,7 @@ public class MainMenuActivity extends Activity {
 		Common.log(5, TAG, "launchArticleFromEAN: will atempt to launch service to get content from url '" + url + "'");
 		
 		scannedArticle = null;
-		(new HTTPRequest(new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_ARTICLE)).start();
+		(new HTTPRequest(this, new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_ARTICLE)).start();
 		dialog = ProgressDialog.show(this, "A obter informação", "a consultar...");
 		
 		Common.log(5, TAG, "launchArticleFromEAN: finished");
@@ -339,6 +348,9 @@ public class MainMenuActivity extends Activity {
 			MainMenuActivity outerClassLocalObj = outerClass.get();
 			String errorMsg = null;
 			switch (msg.what) {
+        	case HTTPRequest.responseOutputs.FAILED_NO_NETWORK_CONNECTION_DETECTED:
+        		errorMsg = "No network connection was detected; cannot continue";
+        		break;
         	case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
         		errorMsg = "Supplied value was not valid";
         		break;
@@ -358,6 +370,9 @@ public class MainMenuActivity extends Activity {
         	case HTTPRequest.responseOutputs.SUCCESS:
         		errorMsg = "Retorno COM resultado"; 
         		outerClassLocalObj.scannedArticle = (Article) msg.obj;
+        		break;
+    		default:
+        		errorMsg = "Undefined error when retrieving data from the internet";
         		break;
         	}
         	if(outerClassLocalObj.dialog != null && outerClassLocalObj.dialog.isShowing())

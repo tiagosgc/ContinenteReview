@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package pt.continente.review.common;
+package pt.continente.review;
 
 import android.app.AlertDialog;
 import android.app.Activity;

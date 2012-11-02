@@ -20,6 +20,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -27,6 +28,7 @@ import android.os.Message;
 public class HTTPRequest extends Thread {
 	private static final String TAG = "CntRev - HTTPRequest";
 
+	private Context context; 
 	private String urlBeingSought; 
 	private HttpResponse response;
 	private Handler parentHandler;
@@ -38,7 +40,8 @@ public class HTTPRequest extends Thread {
 	}
 
 	public static class responseOutputs {
-		public final static int SUCCESS = 10;
+		public final static int SUCCESS = 5;
+		public final static int FAILED_NO_NETWORK_CONNECTION_DETECTED = 10;
 		public final static int FAILED_ERROR_ON_SUPPLIED_URL = 11;
 		public final static int FAILED_QUERY_FROM_INTERNET = 12;
 		public final static int FAILED_GETTING_VALID_RESPONSE_FROM_QUERY = 13;
@@ -46,11 +49,12 @@ public class HTTPRequest extends Thread {
 		public final static int FAILED_OBJECT_NOT_FOUND = 15;
 	}
 
-	public HTTPRequest(Handler parentHandler, String url, int requestType) {
-		response = null;
-		urlBeingSought = url;
+	public HTTPRequest(Context context, Handler parentHandler, String url, int requestType) {
+		this.context = context;
 		this.parentHandler = parentHandler;
+		this.urlBeingSought = url;
 		this.requestType = requestType;
+		response = null;
 	}
 	
 	@Override
@@ -58,11 +62,18 @@ public class HTTPRequest extends Thread {
 		super.run();
 		Common.log(5, TAG, "run: started");
 		
-		Message messageToParent = null;
+		Message messageToParent = new Message();
+
+		if(!Common.isNetworkConnected(context)) {
+			Common.log(1, TAG, "run: no network connection present");
+			messageToParent.what = responseOutputs.FAILED_NO_NETWORK_CONNECTION_DETECTED;
+			parentHandler.sendMessage(messageToParent);
+			return;
+		}
+		
 		DefaultHttpClient client = null;
 		HttpContext localContext = null;
 		try {
-			messageToParent = new Message();
 			client = new DefaultHttpClient();
 			localContext = new BasicHttpContext();
 		} catch (Exception e) {
@@ -78,9 +89,6 @@ public class HTTPRequest extends Thread {
 		} catch (IllegalArgumentException e) {
 			Common.log(1, TAG, "run: ERROR in supplied url - " + e.getMessage());
 			messageToParent.what = responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL;
-		}
-
-		if (messageToParent.what != 0) {
 			parentHandler.sendMessage(messageToParent);
 			return;
 		}

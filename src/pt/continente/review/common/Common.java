@@ -6,6 +6,8 @@ import java.io.ByteArrayOutputStream;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 import android.util.TypedValue;
 import android.widget.Toast;
@@ -72,4 +74,12 @@ public class Common {
 		return image;
 	}
 
+	public static boolean isNetworkConnected(Context context) {
+		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo ni = cm.getActiveNetworkInfo();
+		if (ni == null)
+			return false;
+		else
+			return true;
+	}
 }

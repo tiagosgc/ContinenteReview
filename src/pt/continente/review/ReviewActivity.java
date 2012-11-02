@@ -1,11 +1,16 @@
-package pt.continente.review.common;
+package pt.continente.review;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import pt.continente.review.R;
+import pt.continente.review.common.Article;
+import pt.continente.review.common.Common;
+import pt.continente.review.common.Dimension;
+import pt.continente.review.common.HTTPRequest;
+import pt.continente.review.common.Review;
+import pt.continente.review.common.ReviewDimension;
 import pt.continente.review.getpictures.PhotosManagementActivity;
 import pt.continente.review.tables.ArticlesTable;
 import pt.continente.review.tables.DimensionsTable;
@@ -134,7 +139,7 @@ public class ReviewActivity extends Activity {
 
 	    	String url = Common.httpVariables.DIMENSIONS_PREFIX + article.getId();
 			Common.log(5, TAG, "onResume: will atempt to launch service to get content from url '" + url + "'");
-			(new HTTPRequest(new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_DIMENSIONS)).start();
+			(new HTTPRequest(this, new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_DIMENSIONS)).start();
 			dialog = ProgressDialog.show(this, "A obter informação", "a consultar...");
 		}
 		
@@ -664,6 +669,9 @@ public class ReviewActivity extends Activity {
 			List<Dimension> newDims = null;
 
 			switch (msg.what) {
+        	case HTTPRequest.responseOutputs.FAILED_NO_NETWORK_CONNECTION_DETECTED:
+        		errorMsg = "No network connection was detected; cannot continue";
+        		break;
         	case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
         		errorMsg = "Supplied value was not valid";
         		break;
@@ -682,6 +690,9 @@ public class ReviewActivity extends Activity {
         		break;
         	case HTTPRequest.responseOutputs.SUCCESS:
         		newDims = (List<Dimension>) msg.obj;
+        		break;
+    		default:
+        		errorMsg = "Undefined error when retrieving data from the internet";
         		break;
         	}
 			

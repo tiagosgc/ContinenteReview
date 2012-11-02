@@ -2,25 +2,28 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
-
+    android:orientation="vertical"
+    android:padding="@dimen/paddingGeneral" >
+
     <Button
         android:id="@+id/button1"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="adicionaNova"
-        android:text="Adiciona nova" />
-
-	<GridView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:text="@string/button_addNewPhoto" />
+
+	<GridView
+	    xmlns:android="http://schemas.android.com/apk/res/android"
 	    android:id="@+id/grid_view"
 	    android:layout_width="fill_parent"
 	    android:layout_height="fill_parent"
-	    android:numColumns="auto_fit"
+	    android:layout_marginTop="10dp"
 	    android:columnWidth="90dp"
-	    android:horizontalSpacing="10dp"
-	    android:verticalSpacing="10dp"
 	    android:gravity="center"
-	    android:stretchMode="columnWidth" >  
+	    android:horizontalSpacing="10dp"
+	    android:numColumns="auto_fit"
+	    android:stretchMode="columnWidth"
+	    android:verticalSpacing="10dp" >
 	 
 	</GridView>
 </LinearLayout>

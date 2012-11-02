@@ -3,34 +3,8 @@
     android:id="@+id/LinearLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-
-        <ImageView
-            android:id="@+id/topIcon"
-            android:layout_width="63dp"
-            android:layout_height="fill_parent"
-            android:minHeight="60dp"
-            android:layout_marginLeft="4dp"
-            android:contentDescription="@string/iconDesc"
-            android:src="@drawable/main_logo" />
-
-        <TextView
-            android:id="@+id/topText"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left|center_vertical"
-            android:paddingLeft="10dp"
-            android:text="@string/topTextString"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textSize="28dp" />
-
-    </LinearLayout>
-
-
+    android:orientation="vertical"
+    android:padding="@dimen/paddingGeneral" >
 
 <!-- 
 reviewHistoryButton
@@ -40,18 +14,32 @@ startScannerButton
   
 
 -->
+
+    <TextView
+        android:id="@+id/titleOldHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:drawableLeft="@drawable/main_logo"
+        android:drawablePadding="5dp"
+        android:gravity="center_vertical"
+        android:text="@string/app_name"
+        android:textSize="26sp"
+        android:textStyle="bold" />
+
     <Button
         android:id="@+id/reviewHistoryButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="reviewHistory"
-        android:text="@+string/reviewHistoryLabel" />
+        android:text="@string/button_reviewHistoryLabel" />
+
     <Button
         android:id="@+id/searchProductButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="searchProduct"
-        android:text="@+string/searchProductLabel" />
+        android:text="@string/button_searchProductLabel" />
 
     <Button
         android:id="@+id/insertEANButton"
@@ -59,7 +47,7 @@ startScannerButton
         android:layout_height="wrap_content"
         android:minWidth="80dip"
         android:onClick="insertEAN"
-        android:text="@+string/insertEANLabel" />
+        android:text="@string/button_insertEANLabel" />
 
     <Button
         android:id="@+id/startScannerButton"
@@ -67,7 +55,7 @@ startScannerButton
         android:layout_height="fill_parent"
         android:layout_gravity="bottom"
         android:onClick="startScanner"
-        android:text="@+string/startScannerLabel"
+        android:text="@string/button_startScannerLabel"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
 </LinearLayout>

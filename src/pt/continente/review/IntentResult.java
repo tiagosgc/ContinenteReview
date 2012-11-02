@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package pt.continente.review.common;
+package pt.continente.review;
+
 
 /**
  * <p>Encapsulates the result of a barcode scan invoked through {@link IntentIntegrator}.</p>
