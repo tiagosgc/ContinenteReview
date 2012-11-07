@@ -29,6 +29,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/**Isto e uma classe
+ * @author tacarvalho
+ *
+ */
 public class MainMenuActivity extends Activity { 
 	private static final String TAG = "CntRev - MainMenuActivity";
 
@@ -86,7 +90,7 @@ public class MainMenuActivity extends Activity {
 				public void onClick(DialogInterface dialog, int whichButton) {
 					String value = input.getText().toString();
 					Common.log(5, TAG, "searchProduct: capturou o input '" + value + "'");
-					launchArticleFromEAN(value);
+					launchArticleFromEAN(value); 
 				}
 			}
 		);

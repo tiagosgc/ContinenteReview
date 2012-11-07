@@ -327,6 +327,7 @@ public class HTTPRequest extends Thread {
 			HttpResponse response = httpClient.execute(httpPost, localContext);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
 			String sResponse = reader.readLine();
+			sResponse.compareTo("warningW");
 
 		} catch (Exception e) {
 
