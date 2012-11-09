@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -48,6 +49,7 @@ public class HTTPRequest extends Thread {
 	public static class requestTypes {
 		public static final int GET_ARTICLE = 1;
 		public static final int GET_DIMENSIONS = 2;
+		public static final int SUBMIT_REVIEW = 10;
 	}
 
 	public static class responseOutputs {
@@ -68,11 +70,7 @@ public class HTTPRequest extends Thread {
 		response = null;
 	}
 
-	@Override
-	public void run() {
-		super.run();
-		Common.log(5, TAG, "run: started");
-
+	public void runGetRequest() {
 		Message messageToParent = new Message();
 
 		if (!Common.isNetworkConnected(context)) {
@@ -159,6 +157,10 @@ public class HTTPRequest extends Thread {
 					break;
 				case requestTypes.GET_DIMENSIONS:
 					List<Dimension> newDimList = getDimensionsFromDoc(newDocument);
+					Iterator<Dimension> itr = newDimList.iterator();
+					while (itr.hasNext()) {
+						Common.log(5, TAG, "Dimensão recebida no httpRequest:" + ((Dimension) itr.next()).getLabel());
+					}
 					messageToParent.obj = newDimList;
 					break;
 				}
@@ -172,6 +174,22 @@ public class HTTPRequest extends Thread {
 			}
 		}
 		Common.log(5, TAG, "run: finished");
+	}
+
+	@Override
+	public void run() {
+		super.run();
+		
+		if (requestType == HTTPRequest.requestTypes.SUBMIT_REVIEW) {
+			Common.log(5, TAG, "run POST: started");
+			// Afinal não é para fazer um get, mas sim um Post
+			//Common.longToast(context, "Placeholder para o POST da review");
+			Common.log(5, TAG, "POST to server not yet implemented");
+		} else {
+			Common.log(5, TAG, "run GET: started");
+			runGetRequest();
+		}
+
 	}
 
 	public static List<Dimension> getDimensionsFromDoc(Document document) {

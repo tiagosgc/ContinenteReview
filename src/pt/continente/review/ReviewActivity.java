@@ -3,8 +3,10 @@ package pt.continente.review;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
+import pt.continente.review.MainMenuActivity.httpRequestHandler;
 import pt.continente.review.common.Article;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.Dimension;
@@ -405,6 +407,7 @@ public class ReviewActivity extends Activity {
 		Common.log(5, TAG, "addNewReview: will add new dimensions");
 		errorCount = 0;
 		for (Dimension dim : dimensions) {
+			Common.log(5,TAG,"Olha uma dimensaooo:" + dim.getName());
 			ReviewDimension revDimTmp = new ReviewDimension(revResult, dim.getId(), -1);
 			long revDimResult = revDimTab.addItem(revDimTmp);
 			if (revDimResult == -1) {
@@ -601,14 +604,14 @@ public class ReviewActivity extends Activity {
 		AlertDialog.Builder alert = new AlertDialog.Builder(this);
 		alert.setTitle("Submeter Review");
 		alert.setMessage("Tem a certeza que pretende submeter este Review?");
+		ReviewActivity ra = this;
 		alert.setPositiveButton("Submeter", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
 				review.setState(Common.revStates.COMPLETED);
 				reviewSave();
-				// TODO Tiago: A review não tem dimensões, é esta actividade que tem uma lista? 
-				// Hummmmm, queria mandar tudo para cima, não sei bem onde andam as peças
-				// A review tem um artigo, mas esta atividade também. É o mesmo?
-				// HTTPRequest.submitReview(review, article);
+				// TODO Não tenho acesso ao servidor para fazer a página php
+				String url = "www.google.com";
+				(new HTTPRequest(context, new httpRequestHandler((ReviewActivity) context), url, HTTPRequest.requestTypes.SUBMIT_REVIEW)).start();
 				Common.longToast(context, "Submission not yet implemented; just changed the state to COMPLETED");
 				
 				//
@@ -670,6 +673,7 @@ public class ReviewActivity extends Activity {
 		@SuppressWarnings("unchecked")
 		@Override
 		public void handleMessage(android.os.Message msg) {
+			Common.log(5, TAG, "Comecei a tratar as dimensoes que recebi");
 			ReviewActivity outerClassLocalObj = outerClass.get();
 			String errorMsg = null;
 			List<Dimension> newDims = null;
@@ -696,6 +700,12 @@ public class ReviewActivity extends Activity {
 				break;
 			case HTTPRequest.responseOutputs.SUCCESS:
 				newDims = (List<Dimension>) msg.obj;
+				
+				Iterator<Dimension> itr = newDims.iterator();
+				while (itr.hasNext())
+				{
+					Common.log(5, TAG, "Dimensão recebida no ReviewActivity:" + ((Dimension) itr.next()).getLabel());
+				}
 				break;
 			default:
 				errorMsg = "Undefined error when retrieving data from the internet";
