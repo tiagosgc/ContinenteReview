@@ -138,7 +138,7 @@ public class ReviewDimensionsTable {
 	    long newItemId = database.insert(TABLE_NAME, null, values);
 	    if(newItemId == -1) {
 	    	Common.log(1, TAG, "addItem: couldn't insert new Device into table");
-	    	//FIXME na segunda iteração do For em Review Activity vem parar aqui. (device!?!?!?)
+	    	
 			return -2;
 	    }
 	    

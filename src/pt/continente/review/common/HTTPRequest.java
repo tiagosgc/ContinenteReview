@@ -30,6 +30,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import pt.continente.review.ReviewActivity;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -185,6 +187,7 @@ public class HTTPRequest extends Thread {
 			// Afinal não é para fazer um get, mas sim um Post
 			//Common.longToast(context, "Placeholder para o POST da review");
 			Common.log(5, TAG, "POST to server not yet implemented");
+			submitReview();
 		} else {
 			Common.log(5, TAG, "run GET: started");
 			runGetRequest();
@@ -314,13 +317,15 @@ public class HTTPRequest extends Thread {
 		return gettedArticle;
 	}
 
-	// FIXME Isto nao pode ficar no HTTPRequest
-	// O HTTPRequest assume que tem que fazer um GET e depois trata um XML, que
-	// não e o caso aqui
-
-	// FIXME Isto foi testado umas ZERO vezes, que é mais ou menos a
-	// probabilidade de funcionar à primeira
-	public void submitReview(Review review, Article article, Bitmap bitmap) throws Exception {
+	/* TODO Tiago:submitReview()
+	 * Para já imprimir tudo o que é para submeter. O URL já está bem, o código comentado é um POST basico
+	 */
+	public void submitReview() { //throws Exception { // Review review, Article article, Bitmap bitmap)
+		ReviewActivity reviewActivity = (ReviewActivity) context;
+		Article article = reviewActivity.article;
+		Common.log(5, TAG, "Vou fazer um Submit de um review. Deixa ver se tenho tudo o que preciso);");
+		Common.log(5, TAG, article.getId() + article.getName());
+		/*
 		try {
 
 			HttpClient httpClient = new DefaultHttpClient();
@@ -352,7 +357,7 @@ public class HTTPRequest extends Thread {
 			Common.log(5, TAG, "Erro a fazer upload de review");
 			Common.log(5, TAG, "" + e);
 			Common.longToast(this.context, "Erro a fazer upload de review");
-		}
+		}*/
 
 	}
 

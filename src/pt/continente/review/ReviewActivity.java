@@ -48,7 +48,7 @@ public class ReviewActivity extends Activity {
 	private Context context = this;
 
 	private static long revId;
-	private Article article = null;
+	public Article article = null;
 	private Review review = null;
 	private List<Dimension> dimensions = null;
 	private List<ReviewDimension> reviewDimensions = null;
@@ -114,7 +114,7 @@ public class ReviewActivity extends Activity {
 				return;
 			}
 			long revIdTmp = revTab.findItemFromActive(article.getId());
-			// TODO se existir um review fechado vai retornar esse e devia criar
+			// TODO Fred:se existir um review fechado vai retornar esse e devia criar
 			// um novo em vez disso
 			if (revIdTmp > 0) {
 				revId = revIdTmp;
@@ -137,6 +137,11 @@ public class ReviewActivity extends Activity {
 
 			String url = Common.httpVariables.DIMENSIONS_PREFIX + article.getId();
 			Common.log(5, TAG, "onResume: will atempt to launch service to get content from url '" + url + "'");
+			//TODO Tiago:Quando lançar isto tenho que ter neste objecto tudo o que é para fazer submit
+			//Article id:OK
+			//Comentário:?
+			//Fotos:?
+			//Dimensões com o score preenchido:?
 			(new HTTPRequest(this, new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_DIMENSIONS)).start();
 			dialog = ProgressDialog.show(this, "A obter informação", "a consultar...");
 		}
@@ -407,8 +412,8 @@ public class ReviewActivity extends Activity {
 		Common.log(5, TAG, "addNewReview: will add new dimensions");
 		errorCount = 0;
 		for (Dimension dim : dimensions) {
-			Common.log(5,TAG,"Olha uma dimensaooo:" + dim.getName());
 			ReviewDimension revDimTmp = new ReviewDimension(revResult, dim.getId(), -1);
+			//FIXME para o Fred: Este addItem retorna -2 quando se tenta adicionar a segunda dimensão
 			long revDimResult = revDimTab.addItem(revDimTmp);
 			if (revDimResult == -1) {
 				Common.log(3, TAG, "addNewReview: dimension with ID '" + dim.getId() + "' already exists in the table and was not added");
@@ -609,8 +614,8 @@ public class ReviewActivity extends Activity {
 			public void onClick(DialogInterface dialog, int whichButton) {
 				review.setState(Common.revStates.COMPLETED);
 				reviewSave();
-				// TODO Não tenho acesso ao servidor para fazer a página php
-				String url = "www.google.com";
+				
+				String url = Common.httpVariables.REVIEW_PREFIX;
 				(new HTTPRequest(context, new httpRequestHandler((ReviewActivity) context), url, HTTPRequest.requestTypes.SUBMIT_REVIEW)).start();
 				Common.longToast(context, "Submission not yet implemented; just changed the state to COMPLETED");
 				
@@ -628,6 +633,10 @@ public class ReviewActivity extends Activity {
 	}
 
 	public void reviewPhotos(View view) {
+		//FIXME para o Fred:O Tiago encontrou um bug. 
+		/* Se clickares no botão de tirar fotos e te arrependeres sem tirar nenhuma foto, o botão de back não funciona
+		 * Mais: Mesmo no momento de optar pela app que vai "tirar fotos", já não consigo fazer back
+		 */
 		Intent intent = new Intent(this, PhotosManagementActivity.class);
 		intent.putExtra("revId", review.getId());
 		startActivity(intent);

@@ -29,7 +29,6 @@ public class Common {
 		public static final String IMAGE_PREFIX = "http://www.continente.pt/Images/media/Products/";
 		public static final String ARTICLE_PREFIX = "http://" + SERVER_IP + "/ContinenteReview/article.php?ean=";
 		public static final String DIMENSIONS_PREFIX = "http://" + SERVER_IP + "/ContinenteReview/dimensions.php?article_id=";
-		//TODO A Pagina review.php ainda nao existe
 		public static final String REVIEW_PREFIX = "http://" + SERVER_IP + "/ContinenteReview/review.php";
 	}
 	

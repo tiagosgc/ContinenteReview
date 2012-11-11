@@ -55,7 +55,7 @@ public class PhotosManagementActivity extends Activity {
 		Intent i = getIntent();
 		relevantRevId = i.getExtras().getLong("revId");
 		
-		//TODO criar handling para Id <0 (inválido)        
+		//TODO Fred:criar handling para Id <0 (inválido)        
 		
 		Common.log(5, TAG, "onCreate: will create the table Object");
 		try {
@@ -136,7 +136,7 @@ public class PhotosManagementActivity extends Activity {
 			}
 			if(revImgsTable.addItem(newRevImg)<=0)
 				Common.log(3, TAG, "onActivityResult: could not add the new picture");
-			//TODO testar se isto está a fazer o q é suposto (apagar a foto q acabou de tirar)
+			//TODO Fred:testar se isto está a fazer o q é suposto (apagar a foto q acabou de tirar)
 			deleteLastFromDCIM();
 			updateView();
 		}
