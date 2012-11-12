@@ -1,8 +1,12 @@
 package pt.continente.review.common;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -11,7 +15,13 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.ByteArrayBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
@@ -20,7 +30,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import pt.continente.review.ReviewActivity;
+
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -28,8 +42,8 @@ import android.os.Message;
 public class HTTPRequest extends Thread {
 	private static final String TAG = "CntRev - HTTPRequest";
 
-	private Context context; 
-	private String urlBeingSought; 
+	private Context context;
+	private String urlBeingSought;
 	private HttpResponse response;
 	private Handler parentHandler;
 	private int requestType;
@@ -37,6 +51,7 @@ public class HTTPRequest extends Thread {
 	public static class requestTypes {
 		public static final int GET_ARTICLE = 1;
 		public static final int GET_DIMENSIONS = 2;
+		public static final int SUBMIT_REVIEW = 10;
 	}
 
 	public static class responseOutputs {
@@ -56,21 +71,17 @@ public class HTTPRequest extends Thread {
 		this.requestType = requestType;
 		response = null;
 	}
-	
-	@Override
-	public void run() {
-		super.run();
-		Common.log(5, TAG, "run: started");
-		
+
+	public void runGetRequest() {
 		Message messageToParent = new Message();
 
-		if(!Common.isNetworkConnected(context)) {
+		if (!Common.isNetworkConnected(context)) {
 			Common.log(1, TAG, "run: no network connection present");
 			messageToParent.what = responseOutputs.FAILED_NO_NETWORK_CONNECTION_DETECTED;
 			parentHandler.sendMessage(messageToParent);
 			return;
 		}
-		
+
 		DefaultHttpClient client = null;
 		HttpContext localContext = null;
 		try {
@@ -79,10 +90,10 @@ public class HTTPRequest extends Thread {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		messageToParent.what = 0;
 		response = null;
-		
+
 		HttpGet httpGet = null;
 		try {
 			httpGet = new HttpGet(urlBeingSought);
@@ -122,7 +133,7 @@ public class HTTPRequest extends Thread {
 				dbf.setValidating(false);
 				dbf.setIgnoringElementContentWhitespace(true);
 				DocumentBuilder builder = dbf.newDocumentBuilder();
-				
+
 				HttpEntity entity = response.getEntity();
 				InputStream instream = entity.getContent();
 				newDocument = builder.parse(instream);
@@ -134,12 +145,12 @@ public class HTTPRequest extends Thread {
 				if (node.getNodeName().compareTo("error") == 0) {
 					messageToParent.what = responseOutputs.FAILED_OBJECT_NOT_FOUND;
 					Bundle messageData = new Bundle();
-					messageData.putString("errorMessage", node.getTextContent() );
+					messageData.putString("errorMessage", node.getTextContent());
 					messageToParent.setData(messageData);
 					parentHandler.sendMessage(messageToParent);
 					return;
 				}
-				
+
 				Common.log(5, TAG, "run: conteúdo é válido, vai processar");
 				switch (requestType) {
 				case requestTypes.GET_ARTICLE:
@@ -148,8 +159,12 @@ public class HTTPRequest extends Thread {
 					break;
 				case requestTypes.GET_DIMENSIONS:
 					List<Dimension> newDimList = getDimensionsFromDoc(newDocument);
+					Iterator<Dimension> itr = newDimList.iterator();
+					while (itr.hasNext()) {
+						Common.log(5, TAG, "Dimensão recebida no httpRequest:" + ((Dimension) itr.next()).getLabel());
+					}
 					messageToParent.obj = newDimList;
-					break; 
+					break;
 				}
 				messageToParent.what = responseOutputs.SUCCESS;
 				parentHandler.sendMessage(messageToParent);
@@ -163,34 +178,50 @@ public class HTTPRequest extends Thread {
 		Common.log(5, TAG, "run: finished");
 	}
 
+	@Override
+	public void run() {
+		super.run();
+		
+		if (requestType == HTTPRequest.requestTypes.SUBMIT_REVIEW) {
+			Common.log(5, TAG, "run POST: started");
+			// Afinal não é para fazer um get, mas sim um Post
+			//Common.longToast(context, "Placeholder para o POST da review");
+			Common.log(5, TAG, "POST to server not yet implemented");
+			submitReview();
+		} else {
+			Common.log(5, TAG, "run GET: started");
+			runGetRequest();
+		}
+
+	}
+
 	public static List<Dimension> getDimensionsFromDoc(Document document) {
 		Common.log(5, TAG, "getDimensions: started");
-	
+
 		if (document == null) {
 			return null;
 		}
-		
+
 		Element root;
 		NodeList dimensions;
 		NodeList dimensionNodes;
 		List<Dimension> returnList = new ArrayList<Dimension>();
-		
+
 		document.getDocumentElement().normalize();
 		root = document.getDocumentElement();
 		dimensions = root.getChildNodes();
-		
+
 		Common.log(5, TAG, "getDimensions: found '" + dimensions.getLength() + "' elements in response");
-	
-	
+
 		Node proxNode;
 		Node proxDimension;
-		long id = 0 ;
+		long id = 0;
 		String name = "";
 		String label = "";
 		String min = "";
 		String med = "";
 		String max = "";
-	
+
 		// str = str.replaceAll("[0-9]", "X");
 		for (int i = 0; i < dimensions.getLength(); i++) {
 			proxDimension = dimensions.item(i);
@@ -217,7 +248,7 @@ public class HTTPRequest extends Thread {
 				}
 			}
 			Common.log(5, TAG, "" + id + ":" + name + "." + label + "*" + min + ";;" + med + ";;;" + max);
-			returnList.add(new Dimension(id,name,label,min,med,max));
+			returnList.add(new Dimension(id, name, label, min, med, max));
 		}
 		Common.log(5, TAG, "getDimensions: built an array with '" + returnList.size() + "' elements");
 		Common.log(5, TAG, "getDimensions: finished");
@@ -225,18 +256,18 @@ public class HTTPRequest extends Thread {
 	}
 
 	public static Article getProductFromDoc(Document document) {
-	
+
 		if (document == null) {
 			return null;
 		}
-		
+
 		Element root;
 		NodeList nodeList;
-	
+
 		document.getDocumentElement().normalize();
 		root = document.getDocumentElement();
 		nodeList = root.getChildNodes();
-		
+
 		Node proxNode;
 		String id = "-1";
 		String name = "";
@@ -248,7 +279,7 @@ public class HTTPRequest extends Thread {
 		String prodStructL2 = "";
 		String prodStructL3 = "";
 		String prodStructL4 = "";
-	
+
 		for (int i = 0; i < nodeList.getLength(); i++) {
 			proxNode = nodeList.item(i);
 			if (proxNode.getNodeName().compareTo("id") == 0) {
@@ -278,15 +309,56 @@ public class HTTPRequest extends Thread {
 			if (proxNode.getNodeName().compareTo("prodStructL4") == 0) {
 				prodStructL4 = proxNode.getTextContent();
 			}
-	
+
 		}
 		Common.log(3, TAG, "Name(String):" + name);
-		Article gettedArticle = new Article(Long.parseLong(id), name,
-				description, productEan, Double.parseDouble(price), urlImg,
-				null, Integer.parseInt(prodStructL1),
-				Integer.parseInt(prodStructL2), Integer.parseInt(prodStructL3),
-				Integer.parseInt(prodStructL4));
+		Article gettedArticle = new Article(Long.parseLong(id), name, description, productEan, Double.parseDouble(price), urlImg, null, Integer.parseInt(prodStructL1), Integer.parseInt(prodStructL2), Integer.parseInt(prodStructL3), Integer.parseInt(prodStructL4));
 		Common.log(3, TAG, "" + gettedArticle);
 		return gettedArticle;
 	}
+
+	/* TODO Tiago:submitReview()
+	 * Para já imprimir tudo o que é para submeter. O URL já está bem, o código comentado é um POST basico
+	 */
+	public void submitReview() { //throws Exception { // Review review, Article article, Bitmap bitmap)
+		ReviewActivity reviewActivity = (ReviewActivity) context;
+		Article article = reviewActivity.article;
+		Common.log(5, TAG, "Vou fazer um Submit de um review. Deixa ver se tenho tudo o que preciso);");
+		Common.log(5, TAG, article.getId() + article.getName());
+		/*
+		try {
+
+			HttpClient httpClient = new DefaultHttpClient();
+			HttpContext localContext = new BasicHttpContext();
+			HttpPost httpPost = new HttpPost(Common.httpVariables.REVIEW_PREFIX);
+			MultipartEntity entity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+			Bitmap bmpCompressed = Bitmap.createScaledBitmap(bitmap, 640, 480, true);
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			bmpCompressed.compress(CompressFormat.JPEG, 100, bos);
+			byte[] data = bos.toByteArray();
+			entity.addPart("Article_name", new StringBody(article.getName()));
+			// TO DO and so on and so on, para tudo o que define um artigo...
+
+			// sending a Image;
+			// note here, that you can send more than one image, just add
+			// another param, same rule to the String;
+
+			entity.addPart("Review_image1", new ByteArrayBody(data, "imagem1.jpg"));
+			// TO DO and so on and so on, para todas as imagens
+
+			httpPost.setEntity(entity);
+			HttpResponse response = httpClient.execute(httpPost, localContext);
+			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
+			String sResponse = reader.readLine();
+			sResponse.compareTo("warningW");
+
+		} catch (Exception e) {
+
+			Common.log(5, TAG, "Erro a fazer upload de review");
+			Common.log(5, TAG, "" + e);
+			Common.longToast(this.context, "Erro a fazer upload de review");
+		}*/
+
+	}
+
 }

@@ -81,7 +81,7 @@ public class ReviewsListActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 Common.shortToast(context, "This review has been submited");
-                //TODO criar capacidade de READ-ONLY de um review
+                //TODO Fred:criar capacidade de READ-ONLY de um review
             }
         });
     }
