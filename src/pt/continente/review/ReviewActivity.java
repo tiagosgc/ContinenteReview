@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import pt.continente.review.MainMenuActivity.httpRequestHandler;
 import pt.continente.review.common.Article;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.Dimension;
@@ -114,8 +113,6 @@ public class ReviewActivity extends Activity {
 				return;
 			}
 			long revIdTmp = revTab.findItemFromActive(article.getId());
-			// TODO Fred:se existir um review fechado vai retornar esse e devia criar
-			// um novo em vez disso
 			if (revIdTmp > 0) {
 				revId = revIdTmp;
 			}
@@ -449,12 +446,11 @@ public class ReviewActivity extends Activity {
 		}
 
 		LinearLayout linLay = (LinearLayout) this.findViewById(R.id.mainLinLay);
-		;
 
 		LinearLayout.LayoutParams linLayParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
 		linLayParams.bottomMargin = Common.pixelsFromDPs(this, 20);
 
-		LinearLayout.LayoutParams dimTxtParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 1f);
+		LinearLayout.LayoutParams dimTxtParams = new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
 
 		/*
 		 * Build revDimValues HashMap to recover previous user choices
@@ -682,12 +678,21 @@ public class ReviewActivity extends Activity {
 		@SuppressWarnings("unchecked")
 		@Override
 		public void handleMessage(android.os.Message msg) {
-			Common.log(5, TAG, "Comecei a tratar as dimensoes que recebi");
+			Common.log(5, TAG, "httpRequestHandler: Comecei a tratar as dimensoes que recebi");
 			ReviewActivity outerClassLocalObj = outerClass.get();
 			String errorMsg = null;
 			List<Dimension> newDims = null;
 
 			switch (msg.what) {
+			case HTTPRequest.responseOutputs.SUCCESS:
+				newDims = (List<Dimension>) msg.obj;
+				
+				Iterator<Dimension> itr = newDims.iterator();
+				while (itr.hasNext())
+				{
+					Common.log(5, TAG, "httpRequestHandler: Dimensão recebida no ReviewActivity:" + ((Dimension) itr.next()).getLabel());
+				}
+				break;
 			case HTTPRequest.responseOutputs.FAILED_NO_NETWORK_CONNECTION_DETECTED:
 				errorMsg = "No network connection was detected; cannot continue";
 				break;
@@ -706,15 +711,6 @@ public class ReviewActivity extends Activity {
 			case HTTPRequest.responseOutputs.FAILED_OBJECT_NOT_FOUND:
 				String serverErrorMsg = msg.getData().getString("errorMessage");
 				errorMsg = "Could not find dimensions for this article (" + serverErrorMsg + ")";
-				break;
-			case HTTPRequest.responseOutputs.SUCCESS:
-				newDims = (List<Dimension>) msg.obj;
-				
-				Iterator<Dimension> itr = newDims.iterator();
-				while (itr.hasNext())
-				{
-					Common.log(5, TAG, "Dimensão recebida no ReviewActivity:" + ((Dimension) itr.next()).getLabel());
-				}
 				break;
 			default:
 				errorMsg = "Undefined error when retrieving data from the internet";

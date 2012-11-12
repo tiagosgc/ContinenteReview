@@ -137,8 +137,7 @@ public class ReviewDimensionsTable {
 		Common.log(5, TAG, "addItem: vai tentar carregar registo na db");
 	    long newItemId = database.insert(TABLE_NAME, null, values);
 	    if(newItemId == -1) {
-	    	Common.log(1, TAG, "addItem: couldn't insert new Device into table");
-	    	
+	    	Common.log(1, TAG, "addItem: couldn't insert new Item into table");
 			return -2;
 	    }
 	    
