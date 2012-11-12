@@ -74,18 +74,6 @@ public class ArticleActivity extends Activity {
 		Common.log(5, TAG, "onResume: finished");
 	}
 
-//	@Override
-//	public boolean onOptionsItemSelected(MenuItem item) {
-//	    // Handle item selection
-//	    switch (item.getItemId()) {
-//	        case android.R.id.home:
-//	        	Common.longToast(this, "detected the return click");
-//	    		return true;  
-//	        default:
-//	            return super.onOptionsItemSelected(item);
-//	    }
-//	}
-	
 	public void startReview(View view)
 	{
 		Intent intent = new Intent(this, ReviewActivity.class);

@@ -613,7 +613,7 @@ public class ReviewActivity extends Activity {
 			// Canceled.
 			}
 		});
-	alert.show();
+		alert.show();
 	}
 	
 	public void reviewPhotos(View view) {
