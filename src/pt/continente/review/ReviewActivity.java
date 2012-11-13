@@ -49,9 +49,9 @@ public class ReviewActivity extends Activity {
 
 	private static long revId;
 	public Article article = null;
-	private Review review = null;
+	public Review review = null;
 	private List<Dimension> dimensions = null;
-	private List<ReviewDimension> reviewDimensions = null;
+	public List<ReviewDimension> reviewDimensions = null;
 
 	private ProgressDialog dialog;
 
