@@ -34,10 +34,11 @@
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
     </LinearLayout>
-
+
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp" >
 
         <Button
             android:id="@+id/saveReview"
@@ -61,6 +62,13 @@
             android:text="@string/button_reviewComment" />
 
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/black_bar" />
       
     <ScrollView
         android:id="@+id/scrollView1"

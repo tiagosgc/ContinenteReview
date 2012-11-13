@@ -27,9 +27,11 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
@@ -448,7 +450,7 @@ public class ReviewActivity extends Activity {
 		LinearLayout linLay = (LinearLayout) this.findViewById(R.id.mainLinLay);
 
 		LinearLayout.LayoutParams linLayParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-		linLayParams.bottomMargin = Common.pixelsFromDPs(this, 20);
+		linLayParams.bottomMargin = Common.pixelsFromDPs(this, 40);
 
 		LinearLayout.LayoutParams dimTxtParams = new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
 
@@ -472,6 +474,8 @@ public class ReviewActivity extends Activity {
 
 			TextView newLabel = new TextView(this);
 			newLabel.setText(dim.getLabel());
+			newLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+			newLabel.setTypeface(null, Typeface.BOLD);
 
 			SeekBar newBar = new SeekBar(this);
 			newBar.setId((int) dim.getId());

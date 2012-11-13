@@ -16,17 +16,15 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
-import android.widget.TextView;
 
 public class ReviewsListActivity extends Activity {
 	private static final String TAG = "CntRev - ReviewsListActivity";
-    private ReviewListAdapter adapterPending;
-    private ReviewListAdapter adapterWIP;
-    private ReviewListAdapter adapterComplete;
+    private ReviewListAdapter adapter;
 	private SQLiteHelper dbHelper;
 	private ReviewsTable revsTable;
 	private ArticlesTable artsTable;
 	private Context context = this;
+	private ListView lv;
 	
 	
     @Override
@@ -37,9 +35,7 @@ public class ReviewsListActivity extends Activity {
         Common.log(5, TAG, "onCreate: started");
 
         dbHelper = new SQLiteHelper(this);
-        adapterPending = new ReviewListAdapter(this);
-        adapterWIP = new ReviewListAdapter(this);
-        adapterComplete = new ReviewListAdapter(this);
+        adapter = new ReviewListAdapter(this);
         revsTable = null;
         artsTable = null;
 
@@ -58,30 +54,13 @@ public class ReviewsListActivity extends Activity {
         
         Common.log(5, TAG, "onCreate: will exit");
         
-        ListView lv;
-
         lv = (ListView) findViewById(R.id.ListView00);
+        lv.setAdapter(adapter);
         lv.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                launchReview(id);
-            }
-        });
-
-        lv = (ListView) findViewById(R.id.ListView01);
-        lv.setOnItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                launchReview(id);
-            }
-        });
-
-        lv = (ListView) findViewById(R.id.ListView02);
-        lv.setOnItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                Common.shortToast(context, "This review has been submited");
-                //TODO Fred:criar capacidade de READ-ONLY de um review
+                //if(v.isClickable())
+                	launchReview(id);
             }
         });
     }
@@ -89,12 +68,8 @@ public class ReviewsListActivity extends Activity {
     @Override
 	protected void onResume() {
         Common.log(5, TAG, "onResume: started");
-        adapterPending.deleteAllItems();
-        adapterPending.notifyDataSetChanged();
-        adapterWIP.deleteAllItems();
-        adapterWIP.notifyDataSetChanged();
-        adapterComplete.deleteAllItems();
-        adapterComplete.notifyDataSetChanged();
+        adapter.deleteAllItems();
+        adapter.notifyDataSetChanged();
         try {
 			revsTable.open();
 		} catch (Exception e) {
@@ -107,6 +82,7 @@ public class ReviewsListActivity extends Activity {
 		}
         Common.log(5, TAG, "onResume: will update the view");
         updateView();
+        Common.log(5, TAG, "onResume: finished");
         super.onResume();
 	}
 
@@ -129,45 +105,35 @@ public class ReviewsListActivity extends Activity {
     	Common.log(5, TAG, "updateView: started");
     	List<Review> revs;
     	
-    	revs = revsTable.getAllItemsByState(Common.revStates.PENDING_USER);
-    	if(revs.size() > 0)
-    		updateAdapters((ListView) findViewById(R.id.ListView00), revs, adapterPending);
-    	else
-    		showEmpty(R.id.empty1);
-
-    	revs = revsTable.getAllItemsByState(Common.revStates.WORK_IN_PROGRESS);
-    	if(revs.size() > 0)
-    		updateAdapters((ListView) findViewById(R.id.ListView01), revs, adapterWIP);
-    	else
-    		showEmpty(R.id.empty2);
+    	adapter.deleteAllItems();
     	
+    	adapter.addItem(-1, context.getResources().getString(R.string.label_reviewsListPending), true);
+    	revs = revsTable.getAllItemsByState(Common.revStates.PENDING_USER);
+    	if(revs.size() > 0) addItemsToAdapter(revs);
+    	else Common.log(3, TAG, "updateView: no PENDING reviews found");
+
+    	adapter.addItem(-1, context.getResources().getString(R.string.label_reviewsListWIP), true);
+    	revs = revsTable.getAllItemsByState(Common.revStates.WORK_IN_PROGRESS);
+    	if(revs.size() > 0) addItemsToAdapter(revs);
+    	else Common.log(3, TAG, "updateView: no WIP reviews found");
+    	
+    	adapter.addItem(-1, context.getResources().getString(R.string.label_reviewsListCompleted), true);
     	revs = revsTable.getAllItemsByState(Common.revStates.COMPLETED);
-    	if(revs.size() > 0)
-    		updateAdapters((ListView) findViewById(R.id.ListView02), revs, adapterComplete);
-    	else
-    		showEmpty(R.id.empty3);
-        
+    	if(revs.size() > 0) addItemsToAdapter(revs);
+    	else Common.log(3, TAG, "updateView: no COMPLETED reviews found");
+      
+    	adapter.notifyDataSetChanged();
     	Common.log(5, TAG, "updateView: will exit");
     }
 	
-	private void updateAdapters(ListView view, List<Review> revs, ReviewListAdapter adapter) {
-    	Common.log(5, TAG, "updateAdapters: started");
-    	Common.log(5, TAG, "updateAdapters: got '" + revs.size() + "' items from table");
-    	adapter.deleteAllItems();
-    	Common.log(5, TAG, "updateAdapters: deleted all items");
+	private void addItemsToAdapter(List<Review> revs) {
+    	Common.log(5, TAG, "addItemsToAdapter: started ('" + revs.size() + "' reviews will be processed)");
         for(Review item : revs) {
-        	Common.log(5, TAG, "updateAdapters: will attempt to get Article with Id '" + item.getArticleId() + "'");
+        	//Common.log(5, TAG, "updateAdapters: will attempt to get Article with Id '" + item.getArticleId() + "'");
         	Article artTmp = artsTable.getItem(item.getArticleId());
-        	adapter.addItem(item.getId(), artTmp.getName());
+        	adapter.addItem(item.getId(), artTmp.getName(), false);
         }
-        Common.log(5, TAG, "updateAdapters: added items to adapter (" + adapter.getCount() + ")");
-        view.setAdapter(adapter);
-        Common.log(5, TAG, "updateAdapters: will exit");
-	}
-	
-	private void showEmpty(int txtViewResource) {
-		TextView txtView = (TextView) findViewById(txtViewResource);
-		txtView.setVisibility(TextView.VISIBLE);
+        Common.log(5, TAG, "addItemsToAdapter: finished");
 	}
 	
 	private void launchReview(long id) {

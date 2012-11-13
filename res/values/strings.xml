@@ -22,7 +22,7 @@
     <string name="label_reviewsListPending">Reviews pendentes</string>
     <string name="label_reviewsListWIP">Reviews em curso</string>
     <string name="label_reviewsListCompleted">Reviews terminados</string>
-    <string name="label_reviewsListEmpty">Não há reviews neste estado</string>
+    <string name="label_reviewsListEmpty">n.a.</string>
     <string name="label_generalImageContentDescriptor">Imagem</string>
 
 </resources>

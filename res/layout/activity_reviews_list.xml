@@ -8,79 +8,10 @@
     android:orientation="vertical"
     android:padding="@dimen/paddingGeneral" >
 
-        <TextView
-            android:id="@+id/textView00"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            android:background="@color/black"
-            android:padding="2dp"
-            android:text="@string/label_reviewsListPending"
-            android:textColor="@color/white"
-            android:textSize="24sp" />
+    <ListView
+        android:id="@+id/ListView00"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+    </ListView>
 
-        <ListView
-            android:id="@+id/ListView00"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
-        </ListView>
-
-        <TextView
-            android:id="@+id/empty1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:text="@string/label_reviewsListEmpty"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/TextView01"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            android:layout_marginTop="20dp"
-            android:background="@color/black"
-            android:padding="2dp"
-            android:text="@string/label_reviewsListWIP"
-            android:textColor="@color/white"
-            android:textSize="24sp" />
-
-        <ListView
-            android:id="@+id/ListView01"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
-        </ListView>
-
-        <TextView
-            android:id="@+id/empty2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:text="@string/label_reviewsListEmpty"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/TextView02"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            android:layout_marginTop="20dp"
-            android:background="@color/black"
-            android:padding="2dp"
-            android:text="@string/label_reviewsListCompleted"
-            android:textColor="@color/white"
-            android:textSize="24sp" />
-
-        <ListView
-            android:id="@+id/ListView02"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
-        </ListView>
-
-        <TextView
-            android:id="@+id/empty3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/label_reviewsListEmpty"
-            android:visibility="gone" />
 </LinearLayout>
