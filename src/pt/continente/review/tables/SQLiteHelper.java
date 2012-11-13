@@ -13,7 +13,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 	
 	// Database variables
 	public static final String DATABASE_NAME = "cnt_reviews.db";
-	public static final int DATABASE_VERSION = 8; // >= 1
+	public static final int DATABASE_VERSION = 9; // >= 1
 
 	// Table creation sql statements
 	private static final String CREATE_ARTICLES_TABLE = "create table " + ArticlesTable.TABLE_NAME + "("
@@ -53,7 +53,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 			+ ");";
 	
 	private static final String CREATE_REVIEW_DIMENSIONS_TABLE = "create table " + ReviewDimensionsTable.TABLE_NAME + "("
-			+ ReviewDimensionsTable.COLUMN_REVIEW_ID + " integer primary key not null, "
+			+ ReviewDimensionsTable.COLUMN_REVIEW_ID + " integer not null, "
 			+ ReviewDimensionsTable.COLUMN_DIMENSION_ID + " integer not null, "
 			+ ReviewDimensionsTable.COLUMN_REVIEW_DIMENSION_VALUE + " integer not null, "
 			+ "UNIQUE ("
