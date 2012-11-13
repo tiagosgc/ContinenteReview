@@ -609,7 +609,6 @@ public class ReviewActivity extends Activity {
 		AlertDialog.Builder alert = new AlertDialog.Builder(this);
 		alert.setTitle("Submeter Review");
 		alert.setMessage("Tem a certeza que pretende submeter este Review?");
-		ReviewActivity ra = this;
 		alert.setPositiveButton("Submeter", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
 				review.setState(Common.revStates.COMPLETED);
@@ -617,7 +616,7 @@ public class ReviewActivity extends Activity {
 				
 				String url = Common.httpVariables.REVIEW_PREFIX;
 				(new HTTPRequest(context, new httpRequestHandler((ReviewActivity) context), url, HTTPRequest.requestTypes.SUBMIT_REVIEW)).start();
-				Common.longToast(context, "Submission not yet implemented; just changed the state to COMPLETED");
+				Common.longToast(context, "O review foi submetido com sucesso. Obrigado!");
 				
 				//
 				finish();

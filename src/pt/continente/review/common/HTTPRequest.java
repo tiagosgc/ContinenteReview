@@ -32,12 +32,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import pt.continente.review.ReviewActivity;
-import pt.continente.review.getpictures.ImageAdapter;
 import pt.continente.review.tables.ReviewImagesTable;
 import pt.continente.review.tables.SQLiteHelper;
-
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.os.Bundle;
 import android.os.Handler;
@@ -54,7 +51,6 @@ public class HTTPRequest extends Thread {
 	
 	private ReviewImagesTable revImgsTable;
 	private SQLiteHelper dbHelper;
-	private ImageAdapter imageAdapter;
 	private List<ReviewImage> revImgs;
 	
 	public static class requestTypes {
