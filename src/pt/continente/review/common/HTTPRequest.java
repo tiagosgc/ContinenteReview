@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -31,6 +32,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import pt.continente.review.ReviewActivity;
+import pt.continente.review.getpictures.ImageAdapter;
+import pt.continente.review.tables.ReviewImagesTable;
+import pt.continente.review.tables.SQLiteHelper;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -47,7 +51,12 @@ public class HTTPRequest extends Thread {
 	private HttpResponse response;
 	private Handler parentHandler;
 	private int requestType;
-
+	
+	private ReviewImagesTable revImgsTable;
+	private SQLiteHelper dbHelper;
+	private ImageAdapter imageAdapter;
+	private List<ReviewImage> revImgs;
+	
 	public static class requestTypes {
 		public static final int GET_ARTICLE = 1;
 		public static final int GET_DIMENSIONS = 2;
@@ -319,45 +328,92 @@ public class HTTPRequest extends Thread {
 
 	/* TODO Tiago:submitReview()
 	 * Para já imprimir tudo o que é para submeter. O URL já está bem, o código comentado é um POST basico
+	 * id do artigo
+	 * id do review
+	 * comentário
+	 * n fotos
+	 * n dimensoes, com score
 	 */
 	public void submitReview() { //throws Exception { // Review review, Article article, Bitmap bitmap)
 		ReviewActivity reviewActivity = (ReviewActivity) context;
 		Article article = reviewActivity.article;
+		Review review = reviewActivity.review;
+		List<ReviewDimension> reviewDimensions = reviewActivity.reviewDimensions;
 		Common.log(5, TAG, "Vou fazer um Submit de um review. Deixa ver se tenho tudo o que preciso);");
 		Common.log(5, TAG, article.getId() + article.getName());
-		/*
+		Common.log(5, TAG, "Pelo metodo do FRED, id do artigo:" + review.getArticleId());
+		Common.log(5, TAG, "Pelo metodo do FRED, id do review:" + review.getId());
+		Common.log(5, TAG, "Comentário:" + review.getComment());
+		Common.log(5, TAG,"Vou começar a imprimir dimensões");
+		
+		
+		dbHelper = new SQLiteHelper(context);
 		try {
-
+			revImgsTable = new ReviewImagesTable(dbHelper);
+			revImgsTable.open();
+		} catch (Exception e) {
+			Common.log(1, TAG, "Erro na criação do handle da BD");
+		}
+		revImgs = revImgsTable.getItems(review.getId());
+		
+		//Common.log(5, TAG, "POST de Imagens: got '" + revImgs.size() + "' items from table");
+		
+		
+		try {
 			HttpClient httpClient = new DefaultHttpClient();
 			HttpContext localContext = new BasicHttpContext();
 			HttpPost httpPost = new HttpPost(Common.httpVariables.REVIEW_PREFIX);
 			MultipartEntity entity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
-			Bitmap bmpCompressed = Bitmap.createScaledBitmap(bitmap, 640, 480, true);
+//			Bitmap bmpCompressed = Bitmap.createScaledBitmap(bitmap, 640, 480, true);
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			bmpCompressed.compress(CompressFormat.JPEG, 100, bos);
-			byte[] data = bos.toByteArray();
-			entity.addPart("Article_name", new StringBody(article.getName()));
+			byte[] data;
+			int i = 0;
+			for(ReviewImage item : revImgs) {
+				Common.log(5, TAG, "Aqui está uma imagem:"+item.revImg.getHeight());
+				item.revImg.compress(CompressFormat.JPEG, 100, bos);
+				data = bos.toByteArray();
+				//Common.log(5, TAG, "Vou mandar uma foto, ó para mim a mandar fotos:"+data.length);
+				entity.addPart("review_image"+(new Random().nextLong()), new ByteArrayBody(data, "imagem"+i+".jpg"));
+				i++;
+			}
+			i = 0;
+			for (ReviewDimension revDim : reviewDimensions) {
+				Common.log(5, TAG, "Uma dimensão (dimId,revId,score):(" + revDim.getDimId()+","+revDim.getRevId()+","+revDim.getValue());
+				entity.addPart("dimension"+i, new StringBody(revDim.getDimId()+"-"+revDim.getValue()));
+				i++;
+			}
+			//revImgs.get(0).revImg.compress(CompressFormat.JPEG, 100, bos);
+			//data = bos.toByteArray();
+			//entity.addPart("imagem_sozinha", new ByteArrayBody(data, "temp.jpg"));
+			entity.addPart("article_id", new StringBody(Long.toString(review.getArticleId())));
+			//entity.addPart("review_id", new StringBody(Long.toString(review.getId())));
+			entity.addPart("review_comment", new StringBody(review.getComment()));
+			
 			// TO DO and so on and so on, para tudo o que define um artigo...
-
+			//entity.addPart("Article_name", new StringBody(article.getName()));
 			// sending a Image;
 			// note here, that you can send more than one image, just add
 			// another param, same rule to the String;
 
-			entity.addPart("Review_image1", new ByteArrayBody(data, "imagem1.jpg"));
+			
 			// TO DO and so on and so on, para todas as imagens
 
 			httpPost.setEntity(entity);
 			HttpResponse response = httpClient.execute(httpPost, localContext);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
 			String sResponse = reader.readLine();
-			sResponse.compareTo("warningW");
-
+			while (sResponse != null)
+			{
+				Common.log(5,TAG,"RSP:" + sResponse);
+				sResponse = reader.readLine();
+			}
+			
 		} catch (Exception e) {
 
 			Common.log(5, TAG, "Erro a fazer upload de review");
 			Common.log(5, TAG, "" + e);
 			Common.longToast(this.context, "Erro a fazer upload de review");
-		}*/
+		}
 
 	}
 
