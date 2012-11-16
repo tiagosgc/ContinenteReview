@@ -383,7 +383,7 @@ public class HTTPRequest extends Thread {
 			//entity.addPart("imagem_sozinha", new ByteArrayBody(data, "temp.jpg"));
 			entity.addPart("article_id", new StringBody(Long.toString(review.getArticleId())));
 			//entity.addPart("review_id", new StringBody(Long.toString(review.getId())));
-			entity.addPart("review_comment", new StringBody(review.getComment()));
+			entity.addPart("review_comment", new StringBody(review.getComment()==null?"":review.getComment()));
 			
 			// TO DO and so on and so on, para tudo o que define um artigo...
 			//entity.addPart("Article_name", new StringBody(article.getName()));
