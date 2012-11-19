@@ -18,13 +18,16 @@ import pt.continente.review.tables.SQLiteHelper;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -84,12 +87,16 @@ public class MainMenuActivity extends Activity {
 		alert.setMessage("Introduzir EAN do produto");
 
 		final EditText input = new EditText(this);
+		input.setRawInputType(Configuration.KEYBOARD_12KEY);
 		alert.setView(input);
+		
 
 		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int whichButton) {
 					String value = input.getText().toString();
 					Common.log(5, TAG, "searchProduct: capturou o input '" + value + "'");
+					InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+					imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY,0);
 					launchArticleFromEAN(value); 
 				}
 			}
@@ -97,12 +104,30 @@ public class MainMenuActivity extends Activity {
 
 		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int whichButton) {
-				// Canceled.
+					InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+					imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY,0);
+					// Canceled.
 				}
 			}
 		);
 
+		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+//		imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
+
 		alert.show();
+		
+//		// Dialog
+//		AlertDialog dialog = alert.create();
+//		dialog.setOnShowListener(new OnShowListener() {
+//		    @Override
+//		    public void onShow(DialogInterface dialog) {
+//		        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+//		        imm.showSoftInput(textEdit, InputMethodManager.SHOW_IMPLICIT);
+//		    }
+//		});
+//
+//		dialog.show();
 	}
 
 	public void startScanner(View view) {

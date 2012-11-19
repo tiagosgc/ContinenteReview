@@ -36,6 +36,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -647,8 +648,12 @@ public class ReviewActivity extends Activity {
 
 		alert.setTitle(R.string.label_reviewCommentTitle);
 		alert.setMessage(R.string.label_reviewCommentMessage);
-
+		
 		final EditText input = new EditText(this);
+//		PARA POR MULTILINHA TERA Q SER POR AQUI ... MAS ISTO AINDA NÃO FUNCIONA
+//		input.setGravity(Gravity.TOP);
+//		input.setInputType(InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE);// | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+//		input.setLines(3);
 		if (review.getComment() != null)
 			input.setText(review.getComment());
 		alert.setView(input);
@@ -657,15 +662,22 @@ public class ReviewActivity extends Activity {
 			public void onClick(DialogInterface dialog, int whichButton) {
 				String value = input.getText().toString();
 				Common.log(5, TAG, "reviewComment: capturou o input '" + value + "'");
+				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY,0);
 				review.setComment(value);
 			}
 		});
 
 		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
+				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY,0);
 				// Canceled.
 			}
 		});
+
+		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
 
 		alert.show();
 		Common.log(5, TAG, "reviewComment: will exit");
