@@ -53,6 +53,7 @@ public class ReviewListAdapter extends BaseAdapter {
 	public void deleteAllItems() {
 		revIds.clear();
 		revArtNames.clear();
+		areTitles.clear();
 	}
 
 	public boolean deleteItem(long revId) {
@@ -99,18 +100,6 @@ public class ReviewListAdapter extends BaseAdapter {
 			LinearLayout linLay = new LinearLayout(mContext);
 			linLay.setOrientation(LinearLayout.VERTICAL);
 			
-			//Adds the "empty list" box if previous category was empty
-			if(position > 0 && areTitles.get(position - 1)) {
-				TextView emptyBox = new TextView(mContext);
-				emptyBox.setText(mContext.getResources().getString(R.string.label_reviewsListEmpty));
-				emptyBox.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-				emptyBox.setHeight(Common.pixelsFromDPs(mContext, 48));
-				emptyBox.setGravity(Gravity.CENTER_VERTICAL);
-				emptyBox.setClickable(true);
-				emptyBox.setPadding(Common.pixelsFromDPs(mContext, 5), 0, 0, 0);
-				linLay.addView(emptyBox);
-			}
-			
 			LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
 			params.setMargins(0, Common.pixelsFromDPs(mContext, 10), 0, 0);
 			TextView listTitle = new TextView(mContext);
@@ -125,6 +114,22 @@ public class ReviewListAdapter extends BaseAdapter {
 			listTitle.setClickable(true);
 			listTitle.setPadding(Common.pixelsFromDPs(mContext, 5), 0, 0, 0);
 			linLay.addView(listTitle);
+			
+			//Adds the "empty list" box if previous category was empty
+			TextView emptyBox = new TextView(mContext);
+			emptyBox.setText(mContext.getResources().getString(R.string.label_reviewsListEmpty));
+			emptyBox.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+			emptyBox.setHeight(Common.pixelsFromDPs(mContext, 48));
+			emptyBox.setGravity(Gravity.CENTER_VERTICAL);
+			emptyBox.setClickable(true);
+			emptyBox.setPadding(Common.pixelsFromDPs(mContext, 5), 0, 0, 0);
+			if(areTitles.size() == position + 1) {
+				linLay.addView(emptyBox);
+			} else if(areTitles.size() > position + 1) {
+				if(areTitles.get(position + 1))
+					linLay.addView(emptyBox);
+			}
+			
 			return linLay;
 		}
 	}

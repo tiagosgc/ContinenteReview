@@ -12,7 +12,6 @@ import pt.continente.review.common.Dimension;
 import pt.continente.review.common.HTTPRequest;
 import pt.continente.review.common.Review;
 import pt.continente.review.common.ReviewDimension;
-import pt.continente.review.getpictures.PhotosManagementActivity;
 import pt.continente.review.tables.ArticlesTable;
 import pt.continente.review.tables.DimensionsTable;
 import pt.continente.review.tables.ReviewDimensionsTable;

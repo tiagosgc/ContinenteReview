@@ -1,4 +1,4 @@
-package pt.continente.review.getpictures;
+package pt.continente.review;
 
 import java.io.File;
 import java.util.List;

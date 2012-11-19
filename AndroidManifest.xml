@@ -36,10 +36,10 @@
             android:name=".ReviewsListActivity"
 			android:parentActivityName=".MainMenuActivity" />
         <activity
-            android:name=".getpictures.PhotosManagementActivity"
+            android:name=".PhotosManagementActivity"
 			android:parentActivityName=".ReviewActivity" />
         <activity
-            android:name=".getpictures.FullImageActivity"
+            android:name=".FullImageActivity"
 			android:parentActivityName=".getpictures.PhotosManagementActivity" />
         <activity
             android:name=".ReviewWithTabs"

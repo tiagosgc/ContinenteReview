@@ -1,4 +1,4 @@
-package pt.continente.review.getpictures;
+package pt.continente.review;
 
 import pt.continente.review.R;
 import android.app.Activity;
