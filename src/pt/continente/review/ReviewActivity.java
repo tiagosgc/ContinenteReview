@@ -413,7 +413,6 @@ public class ReviewActivity extends Activity {
 		errorCount = 0;
 		for (Dimension dim : dimensions) {
 			ReviewDimension revDimTmp = new ReviewDimension(revResult, dim.getId(), -1);
-			//FIXME para o Fred: Este addItem retorna -2 quando se tenta adicionar a segunda dimensão
 			long revDimResult = revDimTab.addItem(revDimTmp);
 			if (revDimResult == -1) {
 				Common.log(3, TAG, "addNewReview: dimension with ID '" + dim.getId() + "' already exists in the table and was not added");
@@ -633,10 +632,6 @@ public class ReviewActivity extends Activity {
 	}
 
 	public void reviewPhotos(View view) {
-		//FIXME para o Fred:O Tiago encontrou um bug. 
-		/* Se clickares no botão de tirar fotos e te arrependeres sem tirar nenhuma foto, o botão de back não funciona
-		 * Mais: Mesmo no momento de optar pela app que vai "tirar fotos", já não consigo fazer back
-		 */
 		Intent intent = new Intent(this, PhotosManagementActivity.class);
 		intent.putExtra("revId", review.getId());
 		startActivity(intent);
