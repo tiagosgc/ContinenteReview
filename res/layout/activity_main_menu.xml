@@ -35,12 +35,15 @@ startScannerButton
         android:onClick="reviewHistory"
         android:text="@string/button_reviewHistoryLabel" />
 
+     <!--
     <Button
         android:id="@+id/searchProductButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="searchProduct"
         android:text="@string/button_searchProductLabel" />
+    
+-->
 
     <Button
         android:id="@+id/insertEANButton"

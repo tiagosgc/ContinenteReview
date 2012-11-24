@@ -1,5 +1,7 @@
 package pt.continente.review;
 
+import com.bugsense.trace.BugSenseHandler;
+
 import pt.continente.review.R;
 import android.app.Activity;
 import android.content.Intent;
@@ -16,6 +18,7 @@ public class FullImageActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		BugSenseHandler.initAndStartSession(this, "6804ac88");
 		setContentView(R.layout.activity_full_image);
 		
 		// get intent data

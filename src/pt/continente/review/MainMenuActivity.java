@@ -1,6 +1,7 @@
 package pt.continente.review;
 
 import java.lang.ref.WeakReference;
+import com.bugsense.trace.BugSenseHandler;
 import java.util.Random;
 
 import pt.continente.review.common.Article;
@@ -46,6 +47,7 @@ public class MainMenuActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		BugSenseHandler.initAndStartSession(this, "6804ac88");
 		setContentView(R.layout.layout_home_screen);
 	}
 

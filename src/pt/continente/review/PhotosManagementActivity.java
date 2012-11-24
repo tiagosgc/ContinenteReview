@@ -3,6 +3,8 @@ package pt.continente.review;
 import java.io.File;
 import java.util.List;
 
+import com.bugsense.trace.BugSenseHandler;
+
 import pt.continente.review.R;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.ReviewImage;
@@ -41,6 +43,7 @@ public class PhotosManagementActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		BugSenseHandler.initAndStartSession(this, "6804ac88");
 		setContentView(R.layout.activity_photos_management);
 		
 		Common.log(5, TAG, "onCreate: started");

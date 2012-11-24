@@ -2,6 +2,8 @@ package pt.continente.review;
 
 import java.net.URL;
 
+import com.bugsense.trace.BugSenseHandler;
+
 import pt.continente.review.common.Article;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.HTTPGetImage;
@@ -25,6 +27,7 @@ public class ArticleActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		BugSenseHandler.initAndStartSession(this, "6804ac88");
 		Common.log(5, TAG, "onCreate: started");
 		setContentView(R.layout.activity_article);
 		context = this;

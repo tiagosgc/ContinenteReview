@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import com.bugsense.trace.BugSenseHandler;
+
 import pt.continente.review.common.Article;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.Dimension;
@@ -59,6 +61,7 @@ public class ReviewActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		BugSenseHandler.initAndStartSession(this, "6804ac88");
 		Common.log(5, TAG, "onCreate: started");
 		setContentView(R.layout.activity_review);
 
