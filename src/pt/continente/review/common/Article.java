@@ -86,7 +86,7 @@ public class Article implements Serializable {
 	}
 
 	public boolean isFullyDefined() {
-		if(artId != -1 && artName != null && artDescription != null && artEAN != null && artPrice != -1)
+		if(artId != -1 && artName != null && artDescription != null && artEAN != null)
 			return true;
 		return false;
 	}

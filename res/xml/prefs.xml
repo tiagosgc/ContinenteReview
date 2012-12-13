@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-    <EditTextPreference android:key="hostIPAddress" android:title="hostIPAddress"/>
+    <PreferenceCategory android:title="@string/prefs_categInfoUser"><EditTextPreference android:key="userName" android:title="@string/prefs_userName" /><EditTextPreference android:key="userEmail" android:title="@string/prefs_userEmail" /></PreferenceCategory>
+    <PreferenceCategory android:title="@string/prefs_categDataMngmt">
+        <Preference android:title="@string/prefs_clearDB" android:key="clearDB"/>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/prefs_categFeedback">
+        <Preference android:title="@string/prefs_feedback" android:key="feedback"/>
+    </PreferenceCategory>
 </PreferenceScreen>

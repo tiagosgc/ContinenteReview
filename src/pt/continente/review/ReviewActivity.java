@@ -6,12 +6,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import com.bugsense.trace.BugSenseHandler;
-
 import pt.continente.review.common.Article;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.Dimension;
 import pt.continente.review.common.HTTPRequest;
+import pt.continente.review.common.Preferences;
 import pt.continente.review.common.Review;
 import pt.continente.review.common.ReviewDimension;
 import pt.continente.review.tables.ArticlesTable;
@@ -25,16 +24,19 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
@@ -43,6 +45,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
+import com.bugsense.trace.BugSenseHandler;
 
 public class ReviewActivity extends Activity {
 	private static final String TAG = "CntRev - ReviewActivity";
@@ -84,10 +88,21 @@ public class ReviewActivity extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_article, menu);
+		getMenuInflater().inflate(R.menu.general_menu, menu);
 		return true;
 	}
 
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.menu_settings:
+			startActivity(new Intent(this, Preferences.class));
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -608,6 +623,29 @@ public class ReviewActivity extends Activity {
 	 * @param view
 	 */
 	public void reviewSubmit(View view) {
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+		String userName = sharedPref.getString("userName", null);
+		String userEmail = sharedPref.getString("userEmail", null);
+
+		if(userName == null || userName.equals("") || userEmail == null || userEmail.equals("")) {
+			//Common.longToast(this, "Cannot submit, user name/email not defined");
+			AlertDialog.Builder alertUserData = new AlertDialog.Builder(this);
+			alertUserData.setTitle("Submeter Review");
+			alertUserData.setMessage("Não pode submeter a sua opinião sem preencher os dados pessoais.\nPretende preencher agora?");
+			alertUserData.setPositiveButton("Sim", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int whichButton) {
+		    		startActivity(new Intent(context, Preferences.class));
+				}
+			});
+			alertUserData.setNegativeButton("Voltar", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int whichButton) {
+					return;
+				}
+			});
+			alertUserData.show();
+			return;
+		}
+		
 		AlertDialog.Builder alert = new AlertDialog.Builder(this);
 		alert.setTitle("Submeter Review");
 		alert.setMessage("Tem a certeza que pretende submeter este Review?");

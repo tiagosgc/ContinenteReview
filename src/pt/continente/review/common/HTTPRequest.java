@@ -35,10 +35,12 @@ import pt.continente.review.ReviewActivity;
 import pt.continente.review.tables.ReviewImagesTable;
 import pt.continente.review.tables.SQLiteHelper;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap.CompressFormat;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 
 public class HTTPRequest extends Thread {
 	private static final String TAG = "CntRev - HTTPRequest";
@@ -375,7 +377,7 @@ public class HTTPRequest extends Thread {
 			i = 0;
 			for (ReviewDimension revDim : reviewDimensions) {
 				Common.log(5, TAG, "Uma dimensão (dimId,revId,score):(" + revDim.getDimId()+","+revDim.getRevId()+","+revDim.getValue());
-				entity.addPart("dimension"+i, new StringBody(revDim.getDimId()+"-"+revDim.getValue()));
+				entity.addPart("dimension"+i, new StringBody(revDim.getDimId()+"|"+revDim.getValue()));
 				i++;
 			}
 			//revImgs.get(0).revImg.compress(CompressFormat.JPEG, 100, bos);
@@ -384,6 +386,15 @@ public class HTTPRequest extends Thread {
 			entity.addPart("article_id", new StringBody(Long.toString(review.getArticleId())));
 			//entity.addPart("review_id", new StringBody(Long.toString(review.getId())));
 			entity.addPart("review_comment", new StringBody(review.getComment()==null?"":review.getComment()));
+
+			/*
+			 * ADICIONA INFORMAÇÃO DE UTILIZADOR AO POST
+			 */
+			SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+			String userName = sharedPref.getString("userName", null);
+			String userEmail = sharedPref.getString("userEmail", null);
+			entity.addPart("user_name", new StringBody(userName == null ? "[não definido]" : userName));
+			entity.addPart("user_email", new StringBody(userEmail == null ? "[não definido]" : userEmail));
 			
 			// TO DO and so on and so on, para tudo o que define um artigo...
 			//entity.addPart("Article_name", new StringBody(article.getName()));

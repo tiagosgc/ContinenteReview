@@ -7,6 +7,7 @@ import com.bugsense.trace.BugSenseHandler;
 
 import pt.continente.review.R;
 import pt.continente.review.common.Common;
+import pt.continente.review.common.Preferences;
 import pt.continente.review.common.ReviewImage;
 import pt.continente.review.tables.ReviewImagesTable;
 import pt.continente.review.tables.SQLiteHelper;
@@ -17,6 +18,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Parcelable;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -81,6 +83,12 @@ public class PhotosManagementActivity extends Activity {
 	}
 	
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.general_menu, menu);
+		return true;
+	}
+
+	@Override
 	protected void onResume() {
 		Common.log(5, TAG, "onResume: started");
 		try {
@@ -114,6 +122,9 @@ public class PhotosManagementActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+		case R.id.menu_settings:
+			startActivity(new Intent(this, Preferences.class));
+			return true;
 		case android.R.id.home: // handles ActionBar home icon click
 			finish();
 			return true;  

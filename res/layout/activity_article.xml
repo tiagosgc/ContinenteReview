@@ -18,7 +18,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="4dp"
-            android:src="@android:drawable/sym_def_app_icon" />
+            android:contentDescription="@string/label_articleImage"
+            android:src="@drawable/ic_no_photo" />
 
         <TextView
             android:id="@+id/articleName"

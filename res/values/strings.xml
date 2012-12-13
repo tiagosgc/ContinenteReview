@@ -1,11 +1,8 @@
 <resources>
 
     <string name="app_name">Continente Review</string>
-    <string name="menu_settings">Settings</string>
-    <string name="menu_development">Development Tools</string>
-    <string name="menu_clearDB">Clear DB</string>
-    <string name="menu_createTestData">Create Test Data</string>
-    <string name="menu_getSampleDimensions">getDimensions com 71</string>
+    <string name="menu_settings">Definições</string>
+    <string name="menu_clearDB">Apagar todos os reviews</string>
     <string name="button_reviewHistoryLabel">Ver histórico de reviews</string>
     <string name="button_searchProductLabel">Procurar em lista de artigos</string>
     <string name="button_insertEANLabel">Inserir código de barras</string>
@@ -24,5 +21,15 @@
     <string name="label_reviewsListCompleted">Reviews terminados</string>
     <string name="label_reviewsListEmpty">n.a.</string>
     <string name="label_generalImageContentDescriptor">Imagem</string>
+    <string name="label_articleImage">Fotografia do Artigo</string>
+    <string name="prefs_userEmail">Email</string>
+    <string name="prefs_userEmail_invalid">Email inválido.\nPor favor tente novamente</string>
+    <string name="prefs_userName">Nome</string>
+    <string name="prefs_categInfoUser">Informação de Utilizador</string>
+    <string name="prefs_categDataMngmt">Gestão de Dados</string>
+    <string name="prefs_clearDB">Apagar reviews do dispositivo</string>
+    <string name="prefs_categFeedback">Feedback</string>
+    <string name="prefs_feedback">Dar opinião sobre aplicação</string>
+    <string name="button_giveFeedback">Dar opinião sobre app</string>
 
 </resources>

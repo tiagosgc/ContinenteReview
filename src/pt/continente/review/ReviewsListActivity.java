@@ -6,6 +6,7 @@ import com.bugsense.trace.BugSenseHandler;
 
 import pt.continente.review.common.Article;
 import pt.continente.review.common.Common;
+import pt.continente.review.common.Preferences;
 import pt.continente.review.common.Review;
 import pt.continente.review.tables.ArticlesTable;
 import pt.continente.review.tables.ReviewsTable;
@@ -14,6 +15,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -68,7 +71,24 @@ public class ReviewsListActivity extends Activity {
         });
     }
 
-    @Override
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.general_menu, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.menu_settings:
+			startActivity(new Intent(this, Preferences.class));
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+	
+	@Override
 	protected void onResume() {
         Common.log(5, TAG, "onResume: started");
         adapter.deleteAllItems();
@@ -110,11 +130,11 @@ public class ReviewsListActivity extends Activity {
     	
     	adapter.deleteAllItems();
     	
-    	adapter.addItem(-1, context.getResources().getString(R.string.label_reviewsListPending), true);
-    	revs = revsTable.getAllItemsByState(Common.revStates.PENDING_USER);
-    	if(revs.size() > 0) addItemsToAdapter(revs);
-    	else Common.log(3, TAG, "updateView: no PENDING reviews found");
-
+//    	adapter.addItem(-1, context.getResources().getString(R.string.label_reviewsListPending), true);
+//    	revs = revsTable.getAllItemsByState(Common.revStates.PENDING_USER);
+//    	if(revs.size() > 0) addItemsToAdapter(revs);
+//    	else Common.log(3, TAG, "updateView: no PENDING reviews found");
+//
     	adapter.addItem(-1, context.getResources().getString(R.string.label_reviewsListWIP), true);
     	revs = revsTable.getAllItemsByState(Common.revStates.WORK_IN_PROGRESS);
     	if(revs.size() > 0) addItemsToAdapter(revs);

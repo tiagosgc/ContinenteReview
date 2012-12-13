@@ -1,20 +1,15 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/LinearLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    android:orientation="vertical"
+    android:background="@drawable/bkgrimage9f"
     android:padding="@dimen/paddingGeneral" >
 
-<!-- 
-reviewHistoryButton
-searchProductButton
-insertEANButton
-startScannerButton
-  
-
--->
+    <LinearLayout
+        android:id="@+id/LinearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
 
     <TextView
         android:id="@+id/titleOldHeader"
@@ -32,6 +27,8 @@ startScannerButton
         android:id="@+id/reviewHistoryButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:minHeight="80dp"
         android:onClick="reviewHistory"
         android:text="@string/button_reviewHistoryLabel" />
 
@@ -46,20 +43,39 @@ startScannerButton
 -->
 
     <Button
-        android:id="@+id/insertEANButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minWidth="80dip"
-        android:onClick="insertEAN"
-        android:text="@string/button_insertEANLabel" />
-
-    <Button
         android:id="@+id/startScannerButton"
         android:layout_width="match_parent"
-        android:layout_height="fill_parent"
-        android:layout_gravity="bottom"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:minHeight="80dp"
         android:onClick="startScanner"
-        android:text="@string/button_startScannerLabel"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
+        android:text="@string/button_startScannerLabel" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <Button
+            android:id="@+id/insertEANButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="65dp"
+            android:minWidth="80dip"
+            android:onClick="insertEAN"
+            android:text="@string/button_insertEANLabel" />
+
+        <Button
+            android:id="@+id/giveFeedbackButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="65dp"
+            android:minWidth="80dip"
+            android:onClick="giveFeedback"
+            android:text="@string/button_giveFeedback" />
+
+    </LinearLayout>
 
 </LinearLayout>
+</ScrollView>

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
@@ -82,5 +83,23 @@ public class Common {
 			return false;
 		else
 			return true;
+	}
+
+	public static boolean isEmailValid(CharSequence email) {
+		return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+	}
+
+	public static void sendAppReviewByEmail(Context c) {
+		/* Create the Intent */
+		final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+
+		/* Fill it with Data */
+		emailIntent.setType("plain/text");
+		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"Continente Review <continentereview@continente.pt>"});
+		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Opinião sobre app Android Continente Review");
+		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "O que gostei:\n\n\n\n\nO que podia estar melhor:\n\n\n");
+
+		/* Send it off to the Activity-Chooser */
+		c.startActivity(Intent.createChooser(emailIntent, "Enviar email..."));
 	}
 }

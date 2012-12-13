@@ -1,21 +1,11 @@
 package pt.continente.review;
 
 import java.lang.ref.WeakReference;
-import com.bugsense.trace.BugSenseHandler;
-import java.util.Random;
 
 import pt.continente.review.common.Article;
 import pt.continente.review.common.Common;
-import pt.continente.review.common.Dimension;
 import pt.continente.review.common.HTTPRequest;
-import pt.continente.review.common.Review;
-import pt.continente.review.common.ReviewDimension;
-import pt.continente.review.tables.ArticlesTable;
-import pt.continente.review.tables.DimensionsTable;
-import pt.continente.review.tables.ReviewDimensionsTable;
-import pt.continente.review.tables.ReviewImagesTable;
-import pt.continente.review.tables.ReviewsTable;
-import pt.continente.review.tables.SQLiteHelper;
+import pt.continente.review.common.Preferences;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -33,10 +23,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-/**Isto e uma classe
- * @author tacarvalho
- *
- */
+import com.bugsense.trace.BugSenseHandler;
+
 public class MainMenuActivity extends Activity { 
 	private static final String TAG = "CntRev - MainMenuActivity";
 
@@ -53,7 +41,7 @@ public class MainMenuActivity extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_main_menu, menu);
+		getMenuInflater().inflate(R.menu.general_menu, menu);
 		return true;
 	}
 
@@ -119,19 +107,13 @@ public class MainMenuActivity extends Activity {
 
 		alert.show();
 		
-//		// Dialog
-//		AlertDialog dialog = alert.create();
-//		dialog.setOnShowListener(new OnShowListener() {
-//		    @Override
-//		    public void onShow(DialogInterface dialog) {
-//		        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-//		        imm.showSoftInput(textEdit, InputMethodManager.SHOW_IMPLICIT);
-//		    }
-//		});
-//
-//		dialog.show();
 	}
 
+	public void giveFeedback(View view) {
+		Common.sendAppReviewByEmail(this);
+		return;
+	}
+	
 	public void startScanner(View view) {
 		IntentIntegrator.initiateScan(this);
 	} 
@@ -139,38 +121,10 @@ public class MainMenuActivity extends Activity {
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-	    // Handle item selection
 	    switch (item.getItemId()) {
 	        case R.id.menu_settings:
-	        	Common.log(5, TAG,
-	    				"Settings menu click");
-	    		Toast.makeText(getApplicationContext(),
-	    				"Settings",
-	    				Toast.LENGTH_SHORT).show();
-	    		return true;  
-	        case R.id.menu_debug:
-	        	Common.log(5, TAG,
-	    				"Development tools menu click");
-	    		Toast.makeText(getApplicationContext(),
-	    				"Isto ainda há de me dar jeito, nem que seja para definir o IP do servidor",
-	    				Toast.LENGTH_SHORT).show();
-	    		Intent intent = new Intent(this, DevelopmentTools.class);
-				startActivity(intent);
+	    		startActivity(new Intent(this, Preferences.class));
 	    		return true;
-	        case R.id.menu_clearDB:
-	        	limparBD();
-	        	return true;
-	        case R.id.menu_createTestData:
-	    		Common.log(5, TAG, "onOptionsItemSelected: create test articles");
-	        	criarArtigosTeste();
-	    		Common.log(5, TAG, "onOptionsItemSelected: create test reviews");
-	        	criarReviewsTeste();
-	    		Common.log(5, TAG, "onOptionsItemSelected: create test dimensions");
-	        	criarDimensionsTeste();
-	        	return true;
-	        case R.id.menu_getSampleDimensions:
-	        	Common.shortToast(this, "Not implemented");
-	        	return true;
 	        default:
 	            return super.onOptionsItemSelected(item);
 	    }
@@ -220,153 +174,7 @@ public class MainMenuActivity extends Activity {
 			Common.longToast(this, responseStr);
 		}
 	}
-
-    public void criarArtigosTeste() {
-    	SQLiteHelper dbHelper = new SQLiteHelper(this);
-    	ArticlesTable artTab;
-    	try {
-			artTab = new ArticlesTable(dbHelper);
-			artTab.open();
-		} catch (Exception e) {
-			Common.log(1, TAG, "criarArtigosTeste: could not open the table - " + e.getMessage());
-			return;
-		}
-
-    	Article tmpArt;
-    	tmpArt = new Article(1, "Artigo 1", "Descrição do Artigo 1", "1234567890001", 1.234, "http://www.continente.pt/Images/media/Products/Lar/01/07/04/03/2144139_lar.jpg", null, 1, 1, 1, 1);
-    	artTab.addItem(tmpArt);
-        Common.log(3, TAG, "criarArtigosTeste: created '" + tmpArt.getName() + "'");
-    	tmpArt = new Article(2, "Artigo 2", "Descrição do Artigo 2", "1234567890002", 2.234, "http://www.continente.pt/Images/media/Products/Lar/16/03/02/08/4164414_lar.jpg", null, 2, 2, 2, 2);
-    	artTab.addItem(tmpArt);
-        Common.log(3, TAG, "criarArtigosTeste: created '" + tmpArt.getName() + "'");
-    	tmpArt = new Article(3, "Artigo 3", "Descrição do Artigo 3", "1234567890003", 3.234, "http://www.continente.pt/Images/media/Products/Lar/01/11/06/07/4138123_lar.jpg", null, 3, 3, 3, 3);
-    	artTab.addItem(tmpArt);
-        Common.log(3, TAG, "criarArtigosTeste: created '" + tmpArt.getName() + "'");
-    	tmpArt = new Article(4, "Artigo 4", "Descrição do Artigo 4", "1234567890004", 4.234, "http://www.continente.pt/Images/media/Products/Lar/01/11/06/07/4138123_lar.jpg", null, 4, 4, 4, 4);
-    	artTab.addItem(tmpArt);
-        Common.log(3, TAG, "criarArtigosTeste: created '" + tmpArt.getName() + "'");
-    	
-        artTab.close();
-    }
-
-    public void criarReviewsTeste() {
-    	SQLiteHelper dbHelper = new SQLiteHelper(this);
-    	ReviewsTable revTab;
-    	try {
-			revTab = new ReviewsTable(dbHelper);
-			revTab.open();
-		} catch (Exception e) {
-			Common.log(1, TAG, "criarArtigosTeste: could not open the table - " + e.getMessage());
-			return;
-		}
-    	
-    	Review revTmp;
-    	long revTmpId;
-    	
-    	revTmp = new Review(-1, Common.revStates.PENDING_USER, 1, null);
-    	revTmpId = revTab.addItem(revTmp);
-    	criarReviewDimensionsTeste(revTmpId);
-    	
-    	revTmp = new Review(-1, Common.revStates.COMPLETED, 2, "Comment for Art 2");
-    	revTmpId = revTab.addItem(revTmp);
-    	criarReviewDimensionsTeste(revTmpId);
-
-    	revTmp = new Review(-1, Common.revStates.COMPLETED, 3, null);
-    	revTmpId = revTab.addItem(revTmp);
-    	criarReviewDimensionsTeste(revTmpId);
-
-    	revTmp = new Review(-1, Common.revStates.COMPLETED, 4, null);
-    	revTmpId = revTab.addItem(revTmp);
-    	criarReviewDimensionsTeste(revTmpId);
-    	
-    	revTab.close();
-    }
-
-    public void criarDimensionsTeste() {
-    	SQLiteHelper dbHelper = new SQLiteHelper(this);
-    	DimensionsTable dimTab;
-    	try {
-    		dimTab = new DimensionsTable(dbHelper);
-    		dimTab.open();
-		} catch (Exception e) {
-			Common.log(1, TAG, "criarDimensionsTeste: could not open the table - " + e.getMessage());
-			return;
-		}
-    	
-    	Dimension tmpDim;
-    	tmpDim = new Dimension(26, "Dim26", "Dimension 26", "Min26", null, "Max26");
-    	dimTab.addItem(tmpDim);
-    	tmpDim = new Dimension(27, "Dim27", "Dimension 27", "Min27", "Med27", "Max27");
-    	dimTab.addItem(tmpDim);
-    	tmpDim = new Dimension(28, "Dim28", "Dimension 28", "Min28", null, "Max28");
-    	dimTab.addItem(tmpDim);
-    	tmpDim = new Dimension(29, "Dim29", "Dimension 29", "Min29", "Med29", "Max29");
-    	dimTab.addItem(tmpDim);
-    	
-    	dimTab.close();
-    }
-
-    public void criarReviewDimensionsTeste(long revId) {
-		Common.log(5, TAG, "criarReviewDimensionsTeste: started");
-    	SQLiteHelper dbHelper = new SQLiteHelper(this);
-    	ReviewDimensionsTable revDimTab;
-    	try {
-    		revDimTab = new ReviewDimensionsTable(dbHelper);
-    		revDimTab.open();
-		} catch (Exception e) {
-			Common.log(1, TAG, "criarReviewDimensionsTeste: could not open the table - " + e.getMessage());
-			return;
-		}
-    	
-    	Random rand = new Random();
-    	if(rand.nextBoolean())
-    		revDimTab.addItem(new ReviewDimension(revId, 26, -1));
-    	if(rand.nextBoolean())
-    		revDimTab.addItem(new ReviewDimension(revId, 27, -1));
-    	if(rand.nextBoolean())
-    		revDimTab.addItem(new ReviewDimension(revId, 28, -1));
-    	if(rand.nextBoolean())
-    		revDimTab.addItem(new ReviewDimension(revId, 29, -1));
-    	
-    	revDimTab.close();
-    }
-    
-    
-    public void limparBD() {
-    	SQLiteHelper dbHelper = new SQLiteHelper(this);
-    	ArticlesTable artTab;
-    	ReviewsTable revTab;
-    	ReviewImagesTable revImgTab;
-    	DimensionsTable dimTab;
-    	ReviewDimensionsTable revDimTab;
-    	try {
-			artTab = new ArticlesTable(dbHelper);
-			artTab.open();
-			revTab = new ReviewsTable(dbHelper);
-			revTab.open();
-			revImgTab = new ReviewImagesTable(dbHelper);
-			revImgTab.open();
-			dimTab = new DimensionsTable(dbHelper);
-			dimTab.open();
-			revDimTab = new ReviewDimensionsTable(dbHelper);
-			revDimTab.open();
-		} catch (Exception e) {
-			Common.log(1, TAG, "criarArtigosTeste: could not open the table - " + e.getMessage());
-			return;
-		}
-    	artTab.deleteAllItems();
-    	revTab.deleteAllItems();
-    	revImgTab.deleteAllItems();
-    	dimTab.deleteAllItems();
-    	revDimTab.deleteAllItems();
-    	
-    	artTab.close();
-    	revTab.close();
-    	revImgTab.close();
-    	dimTab.close();
-    	revDimTab.close();
-    }
-
+	
 	static class httpRequestHandler extends Handler {
 		WeakReference<MainMenuActivity> outerClass;
 		

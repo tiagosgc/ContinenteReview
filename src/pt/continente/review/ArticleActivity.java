@@ -7,6 +7,7 @@ import com.bugsense.trace.BugSenseHandler;
 import pt.continente.review.common.Article;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.HTTPGetImage;
+import pt.continente.review.common.Preferences;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +15,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -40,8 +42,19 @@ public class ArticleActivity extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_article, menu);
+		getMenuInflater().inflate(R.menu.general_menu, menu);
 		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    switch (item.getItemId()) {
+	        case R.id.menu_settings:
+	    		startActivity(new Intent(this, Preferences.class));
+	    		return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
 	}
 	
 	@Override
@@ -98,7 +111,6 @@ public class ArticleActivity extends Activity {
 				Common.longToast(context, "Error loading image");
 				break;
 			case HTTPGetImage.responseOutputs.SUCCESS:
-//				OLD WAY - Bitmap articleBitmap = (Bitmap) msg.getData().getParcelable("response");
 				Bitmap articleBitmap = (Bitmap) msg.obj;
 				if(articleBitmap != null) {
 					imageView.setImageBitmap(articleBitmap);
@@ -112,35 +124,4 @@ public class ArticleActivity extends Activity {
 			Common.log(5, TAG, "imageThreadHandler: finished");
 		};
 	};
-	
-//	class GetImageTask extends AsyncTask<URL, int[], Bitmap> {
-//
-//		@Override
-//		protected Bitmap doInBackground(URL... urlBeingSought) {
-//			InputStream is = null;
-//			try {
-//				is = (InputStream) urlBeingSought[0].getContent();
-//			} catch (IOException e) {
-//				Common.log(1, TAG, "run: ERROR while gettinf content - " + e.getMessage());
-//				return null;
-//			}
-//
-//			Bitmap productBitmap = BitmapFactory.decodeStream(is);
-//			
-//			if (productBitmap == null) {
-//				Common.log(1, TAG, "run: ERROR converting response to image");
-//				return null;
-//			}
-//			return productBitmap;
-//	    }
-//
-//	    @Override
-//	    protected void onPostExecute(Bitmap bitmapResult) {
-//	      super.onPostExecute(bitmapResult);
-//	      if (bitmapResult != null) {
-//	    	  imageView.setImageBitmap(bitmapResult);
-//	      } else
-//				Common.log(1, TAG, "GetImageTask: onPostExecute: ERROR image received is null");
-//	    }
-//	}
 }
