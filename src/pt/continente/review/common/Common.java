@@ -3,8 +3,10 @@ package pt.continente.review.common;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+import pt.continente.review.R;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
@@ -15,15 +17,11 @@ import android.widget.Toast;
 
 public class Common {
 	//private static final String TAG = "CntRev - Common";
-	private static final int LOG_LEVEL = 7;
-	
 	
 	/*
 	 * CONFIGURATION VARIABLES
 	 */
-	private static final String appFeedbackEmailAddress = "Continente Review <continentereview@continente.pt>";
-	private static final String appFeedbackSubject = "Opinião sobre app Android Continente Review";
-	private static final String appFeedbackBodyText = "O que gostei:\n\n\n\n\nO que podia estar melhor:\n\n\n";
+	private static final int LOG_LEVEL = 7;
 	public static final String bugSenseAppKey = "6804ac88";
 	// END OF CONFIGURATION
 	
@@ -104,10 +102,11 @@ public class Common {
 		final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
 
 		/* Fill it with Data */
+		Resources resources = c.getResources();
 		emailIntent.setType("plain/text");
-		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{appFeedbackEmailAddress});
-		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, appFeedbackSubject);
-		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, appFeedbackBodyText);
+		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{resources.getString(R.string.dialog_feedbackEmailAddress)});
+		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, resources.getString(R.string.dialog_feedbackSubject) + " (v" + resources.getString(R.string.app_versionName) + ")");
+		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, resources.getString(R.string.dialog_feedbackBody));
 
 		/* Send it off to the Activity-Chooser */
 		c.startActivity(Intent.createChooser(emailIntent, "Enviar email..."));

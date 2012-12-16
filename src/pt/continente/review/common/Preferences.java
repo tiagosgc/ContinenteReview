@@ -131,7 +131,7 @@ public class Preferences extends PreferenceActivity {
 					Common.log(5, TAG, "onCreate: onPreferenceClick: will process appVersion click");
 					AlertDialog.Builder alert = new AlertDialog.Builder(context);
 					alert.setTitle(getResources().getString(R.string.prefs_appCreators));
-					alert.setMessage(getResources().getString(R.string.preds_appCreatorsContent));
+					alert.setMessage(getResources().getString(R.string.prefs_appCreatorsContent));
 					alert.setNegativeButton(getResources().getString(R.string.button_generalReturn), new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int whichButton) {
 						// Canceled.

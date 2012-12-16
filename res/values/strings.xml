@@ -39,6 +39,6 @@
     <string name="prefs_categAbout">Sobre a aplicação</string>
     <string name="prefs_appVersion">Versão</string>
     <string name="prefs_appCreators">Criadores</string>
-    <string name="preds_appCreatorsContent">Tiago Carvalho ()\nTiago Oliveira ()\nFrederico Santos (fredcasantos@gmail.com)</string>
+    <string name="prefs_appCreatorsContent">Tiago Carvalho (tiagosgc@gmail.com)\nTiago Oliveira (tiagoli@gmail.com)\nFrederico Santos (fredcasantos@gmail.com)</string>
     
 </resources>

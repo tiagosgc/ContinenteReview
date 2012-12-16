@@ -8,5 +8,8 @@
     <string name="dialog_reviewSubmitConfirmationMessage">Tem a certeza que pretende submeter este Review?\nClique em continuar para enviar o seu feedback para o Continente.\nEsta ação não é revertível.</string>
     <string name="dialog_prefsDeleteReviewsTitle">Apagar reviews do dispositivo</string>
     <string name="dialog_prefsDeleteReviewsMessage">Tem a certeza que pretende apagar todos os reviews (em curso e completos) do dispositivo?</string>
+    <string name="dialog_feedbackEmailAddress">Continente Review &lt;feedback.creview@gmail.com&gt;</string>
+    <string name="dialog_feedbackSubject">Opinião sobre app Android Continente Review</string>
+    <string name="dialog_feedbackBody">O que gostei:\n\n\n\n\nO que podia estar melhor:\n\n\n</string>
     
 </resources>
