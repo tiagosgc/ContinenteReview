@@ -5,7 +5,7 @@
     <string name="dialog_articleTypeEAN">Introduza o código do artigo\n(dígitos abaixo das barras do código de barras)</string>
     <string name="dialog_reviewSubmitTitle">Submeter Review</string>
     <string name="dialog_reviewSubmitUserInfoError">Não pode submeter a sua opinião sem preencher os dados pessoais.\nDepois de preenchidos os dados, clique novamente no botão Submeter\n\nClique em continuar para aceder às definições e preencher agora.</string>
-    <string name="dialog_reviewSubmitConfirmationMessage">Tem a certeza que pretende submeter este Review?\nClique em continuar para enviar o seu feedback para o Continente.\nEsta ação não é revertível.</string>
+    <string name="dialog_reviewSubmitConfirmationMessage">Tem a certeza que pretende submeter este Review?\nClique em continuar para enviar o seu feedback para o Continente.\nEsta ação não é reversível.</string>
     <string name="dialog_prefsDeleteReviewsTitle">Apagar reviews do dispositivo</string>
     <string name="dialog_prefsDeleteReviewsMessage">Tem a certeza que pretende apagar todos os reviews (em curso e completos) do dispositivo?</string>
     <string name="dialog_feedbackEmailAddress">Continente Review &lt;feedback.creview@gmail.com&gt;</string>
