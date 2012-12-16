@@ -1,7 +1,7 @@
 <resources>
 
     <string name="app_name">Continente Review</string>
-    <string name="app_versionName">1.1.1.2</string>
+    <string name="app_versionName">1.1.1.3</string>
     <string name="menu_settings">Definições</string>
     <string name="button_reviewHistoryLabel">Ver histórico de reviews</string>
 <!--
