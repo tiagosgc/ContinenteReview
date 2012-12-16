@@ -43,7 +43,7 @@ public class Preferences extends PreferenceActivity {
 			userEmail.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
 				@Override
 				public boolean onPreferenceChange(Preference pref, Object obj) {
-					if(Common.isEmailValid((String) obj)) {
+					if(Common.isEmailValid((String) obj) || ((String) obj).equals("")) {
 						//Common.shortToast(context, "email is valid");
 						return true;
 					}
@@ -63,15 +63,15 @@ public class Preferences extends PreferenceActivity {
 				public boolean onPreferenceClick(Preference arg0) {
 					Common.log(5, TAG, "onCreate: onPreferenceClick: will process clearDB click");
 					AlertDialog.Builder alert = new AlertDialog.Builder(context);
-					alert.setTitle("Apagar reviews do dispositivo");
-					alert.setMessage("Tem a certeza que pretende apagar todos os reviews (pendentes, em curso e completos) do dispositivo?");
-					alert.setPositiveButton("Apagar", new DialogInterface.OnClickListener() {
+					alert.setTitle(getResources().getString(R.string.dialog_prefsDeleteReviewsTitle));
+					alert.setMessage(getResources().getString(R.string.dialog_prefsDeleteReviewsMessage));
+					alert.setPositiveButton(getResources().getString(R.string.button_generalDelete), new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int whichButton) {
 							Common.log(5, TAG, "onCreate: onPreferenceClick: will clear DB");
 							limparBD();
 						}
 					});
-					alert.setNegativeButton("Voltar", new DialogInterface.OnClickListener() {
+					alert.setNegativeButton(getResources().getString(R.string.button_generalReturn), new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int whichButton) {
 						// Canceled.
 						}
@@ -91,6 +91,53 @@ public class Preferences extends PreferenceActivity {
 				@Override
 				public boolean onPreferenceClick(Preference arg0) {
 					Common.sendAppReviewByEmail(context);
+			        return true;
+				}
+			});
+		
+		
+		/*
+		 * APP VERSION CLICK
+		 */
+		//TODO fix deprecated
+		Preference appVersion = findPreference("appVersion");
+		if (appVersion != null)
+			appVersion.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference arg0) {
+					Common.log(5, TAG, "onCreate: onPreferenceClick: will process appVersion click");
+					AlertDialog.Builder alert = new AlertDialog.Builder(context);
+					alert.setTitle(getResources().getString(R.string.prefs_appVersion));
+					alert.setMessage("Versão número: " + getResources().getString(R.string.app_versionName));
+					alert.setNegativeButton(getResources().getString(R.string.button_generalReturn), new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int whichButton) {
+						// Canceled.
+						}
+					});
+					alert.show();
+			        return true;
+				}
+			});
+
+		/*
+		 * APP CREATORS CLICK
+		 */
+		//TODO fix deprecated
+		Preference appCreators = findPreference("appCreators");
+		if (appCreators != null)
+			appCreators.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference arg0) {
+					Common.log(5, TAG, "onCreate: onPreferenceClick: will process appVersion click");
+					AlertDialog.Builder alert = new AlertDialog.Builder(context);
+					alert.setTitle(getResources().getString(R.string.prefs_appCreators));
+					alert.setMessage(getResources().getString(R.string.preds_appCreatorsContent));
+					alert.setNegativeButton(getResources().getString(R.string.button_generalReturn), new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int whichButton) {
+						// Canceled.
+						}
+					});
+					alert.show();
 			        return true;
 				}
 			});

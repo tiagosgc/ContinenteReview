@@ -1,5 +1,11 @@
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+	
+	<style name="GeneralTheme" parent="android:Theme.Holo.Light">
+<!--	<item name="android:background">@color/white</item> -->
+	</style>
 
-    <style name="AppTheme" parent="android:Theme.Holo.Light" />
+    <style name="GeneralThemeWithBackgroundImage" parent="android:Theme.Holo.Light">
+        <item name="android:background">@drawable/bkgrimage9f</item>
+    </style>
 
 </resources>

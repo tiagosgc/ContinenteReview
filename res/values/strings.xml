@@ -1,12 +1,14 @@
 <resources>
 
     <string name="app_name">Continente Review</string>
+    <string name="app_versionName">1.1.1.1</string>
     <string name="menu_settings">Definições</string>
-    <string name="menu_clearDB">Apagar todos os reviews</string>
     <string name="button_reviewHistoryLabel">Ver histórico de reviews</string>
+<!--
     <string name="button_searchProductLabel">Procurar em lista de artigos</string>
-    <string name="button_insertEANLabel">Inserir código de barras</string>
-    <string name="button_startScannerLabel">Ler Código de barras com a câmara</string>
+-->
+    <string name="button_insertEANLabel">Código de barras por teclado</string>
+    <string name="button_startScannerLabel">Ler código de barras</string>
     <string name="button_reviewLabel">Iniciar novo Review</string>
     <string name="button_reviewPhotos">Fotos</string>
     <string name="button_reviewComment">Comentário</string>
@@ -14,14 +16,18 @@
     <string name="button_addNewPhoto">Adicionar Nova Foto</string>
     <string name="button_generalReturn">Voltar</string>
     <string name="button_generalDelete">Apagar</string>
+    <string name="button_generalSave">Guardar</string>
+    <string name="button_generalContinue">Continuar</string>
+    <string name="button_giveFeedback">Dar opinião sobre app</string>
     <string name="label_reviewCommentTitle">Comentário</string>
     <string name="label_reviewCommentMessage">Defina o comentário que pretende associar a este artigo</string>
+<!--
     <string name="label_reviewsListPending">Reviews pendentes</string>
+-->
     <string name="label_reviewsListWIP">Reviews em curso</string>
     <string name="label_reviewsListCompleted">Reviews terminados</string>
     <string name="label_reviewsListEmpty">n.a.</string>
     <string name="label_generalImageContentDescriptor">Imagem</string>
-    <string name="label_articleImage">Fotografia do Artigo</string>
     <string name="prefs_userEmail">Email</string>
     <string name="prefs_userEmail_invalid">Email inválido.\nPor favor tente novamente</string>
     <string name="prefs_userName">Nome</string>
@@ -30,6 +36,9 @@
     <string name="prefs_clearDB">Apagar reviews do dispositivo</string>
     <string name="prefs_categFeedback">Feedback</string>
     <string name="prefs_feedback">Dar opinião sobre aplicação</string>
-    <string name="button_giveFeedback">Dar opinião sobre app</string>
-
+    <string name="prefs_categAbout">Sobre a aplicação</string>
+    <string name="prefs_appVersion">Versão</string>
+    <string name="prefs_appCreators">Criadores</string>
+    <string name="preds_appCreatorsContent">Tiago Carvalho ()\nTiago Oliveira ()\nFrederico Santos (fredcasantos@gmail.com)</string>
+    
 </resources>

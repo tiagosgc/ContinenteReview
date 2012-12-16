@@ -3,9 +3,6 @@ package pt.continente.review;
 import java.io.File;
 import java.util.List;
 
-import com.bugsense.trace.BugSenseHandler;
-
-import pt.continente.review.R;
 import pt.continente.review.common.Common;
 import pt.continente.review.common.Preferences;
 import pt.continente.review.common.ReviewImage;
@@ -23,7 +20,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
 import android.widget.GridView;
+
+import com.bugsense.trace.BugSenseHandler;
  
 public class PhotosManagementActivity extends Activity {
 	private static final String TAG = "CntRev - PhotosManagementActivity";
@@ -31,6 +31,7 @@ public class PhotosManagementActivity extends Activity {
 	private static final int FULL_SCREEN_VIEW = 1235;
 	
 	private long relevantRevId;
+	private boolean isReviewReadOnly;
 	private ImageAdapter imageAdapter;
 	private SQLiteHelper dbHelper;
 	private ReviewImagesTable revImgsTable;
@@ -38,14 +39,10 @@ public class PhotosManagementActivity extends Activity {
 	private GridView gridView;
 	
 	
-	// TEM QUE RETORNAR UM INTENT
-	//     i.putParcelableArrayListExtra("imagens", localAdapter.getAllItems());
-	
-	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		BugSenseHandler.initAndStartSession(this, "6804ac88");
+		BugSenseHandler.initAndStartSession(this, Common.bugSenseAppKey);
 		setContentView(R.layout.activity_photos_management);
 		
 		Common.log(5, TAG, "onCreate: started");
@@ -58,7 +55,8 @@ public class PhotosManagementActivity extends Activity {
 		gridView.setAdapter(imageAdapter);
 		
 		Intent i = getIntent();
-		relevantRevId = i.getExtras().getLong("revId");
+		relevantRevId = i.getLongExtra("revId", -1L);
+		isReviewReadOnly = i.getBooleanExtra("isReviewReadOnly", false);
 		
 		//TODO Fred:criar handling para Id <0 (inválido)        
 		
@@ -76,6 +74,7 @@ public class PhotosManagementActivity extends Activity {
 				Intent i = new Intent(getApplicationContext(), FullImageActivity.class);
 				i.putExtra("img", (Parcelable) imageAdapter.getItem(position));
 				i.putExtra("imgId", imageAdapter.getImgId(position));
+				i.putExtra("isReviewReadOnly", isReviewReadOnly);
 				startActivityForResult(i, FULL_SCREEN_VIEW);
 			}
 		});
@@ -91,6 +90,14 @@ public class PhotosManagementActivity extends Activity {
 	@Override
 	protected void onResume() {
 		Common.log(5, TAG, "onResume: started");
+		
+		/*
+		 * If is read only, DISABLE ADD NEW PHOTOS BUTTON
+		 */
+		if(isReviewReadOnly) {
+			((Button) findViewById(R.id.buttonAddNewPhoto)).setEnabled(false);
+		}
+				
 		try {
 			revImgsTable.open();
 		} catch (Exception e) {
@@ -187,8 +194,7 @@ public class PhotosManagementActivity extends Activity {
 		
 		boolean success = false;
 		try {
-			File[] images = new File(Environment.getExternalStorageDirectory()
-					+ File.separator + "DCIM/Camera").listFiles();
+			File[] images = new File(Environment.getExternalStorageDirectory() + File.separator + "DCIM/Camera").listFiles();
 			File latestSavedImage = images[0];
 			for (int i = 1; i < images.length; ++i) {
 				if (images[i].lastModified() > latestSavedImage.lastModified()) {
@@ -197,9 +203,7 @@ public class PhotosManagementActivity extends Activity {
 			}
 			
 			// OR JUST Use  success = latestSavedImage.delete();
-			success = new File(Environment.getExternalStorageDirectory()
-					+ File.separator + "DCIM/Camera/"
-					+ latestSavedImage.getAbsoluteFile()).delete();
+			success = (new File(Environment.getExternalStorageDirectory() + File.separator + "DCIM/Camera/" + latestSavedImage.getAbsoluteFile())).delete();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

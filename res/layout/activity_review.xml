@@ -6,42 +6,25 @@
     android:fadeScrollbars="true"
     android:gravity="right"
     android:orientation="vertical"
-    android:paddingBottom="10dp"
-    android:paddingLeft="10dp"
-    android:paddingRight="10dp"
-    android:paddingTop="10dp" >
- 
-    <LinearLayout
+    android:padding="@dimen/paddingGeneral" >
+
+    <TextView
+        android:id="@+id/articleName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
-        android:layout_marginTop="10dp" >
-
-        <ImageView
-            android:id="@+id/articleIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="4dp"
-            android:contentDescription="@string/label_generalImageContentDescriptor"
-            android:src="@drawable/ic_no_photo" />
-
-        <TextView
-            android:id="@+id/articleName"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left|center_vertical"
-            android:paddingLeft="10dp"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    </LinearLayout>
+        android:layout_marginTop="10dp"
+        android:drawableLeft="@drawable/ic_no_photo"
+        android:paddingLeft="10dp"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp" >
-
+
         <Button
-            android:id="@+id/saveReview"
+            android:id="@+id/buttonSubmitReview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="reviewSubmit"
@@ -62,13 +45,14 @@
             android:text="@string/button_reviewComment" />
 
     </LinearLayout>
-
+
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
-        android:background="@drawable/black_bar" />
+        android:background="@drawable/black_bar"
+        android:contentDescription="@string/label_generalImageContentDescriptor" />
       
     <ScrollView
         android:id="@+id/scrollView1"

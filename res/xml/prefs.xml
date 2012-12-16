@@ -7,4 +7,8 @@
     <PreferenceCategory android:title="@string/prefs_categFeedback">
         <Preference android:title="@string/prefs_feedback" android:key="feedback"/>
     </PreferenceCategory>
+    <PreferenceCategory android:title="@string/prefs_categAbout">
+        <Preference android:key="appVersion" android:title="@string/prefs_appVersion"/>
+        <Preference android:key="appCreators" android:title="@string/prefs_appCreators"/>
+    </PreferenceCategory>
 </PreferenceScreen>

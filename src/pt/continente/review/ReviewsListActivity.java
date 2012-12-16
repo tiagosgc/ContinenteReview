@@ -35,7 +35,7 @@ public class ReviewsListActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        BugSenseHandler.initAndStartSession(this, "6804ac88");
+        BugSenseHandler.initAndStartSession(this, Common.bugSenseAppKey);
         setContentView(R.layout.activity_reviews_list);
 
         Common.log(5, TAG, "onCreate: started");
@@ -65,8 +65,7 @@ public class ReviewsListActivity extends Activity {
         lv.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                //if(v.isClickable())
-                	launchReview(id);
+            	launchReview(id, adapter.isReadOnly(position));
             }
         });
     }
@@ -130,38 +129,48 @@ public class ReviewsListActivity extends Activity {
     	
     	adapter.deleteAllItems();
     	
-//    	adapter.addItem(-1, context.getResources().getString(R.string.label_reviewsListPending), true);
+    	/*
+    	 * Add Pending items
+    	 */
+//    	adapter.addItem(-1, context.getResources().getString(R.string.label_reviewsListPending), true, false);
 //    	revs = revsTable.getAllItemsByState(Common.revStates.PENDING_USER);
-//    	if(revs.size() > 0) addItemsToAdapter(revs);
+//    	if(revs.size() > 0) addItemsToAdapter(revs, false);
 //    	else Common.log(3, TAG, "updateView: no PENDING reviews found");
-//
-    	adapter.addItem(-1, context.getResources().getString(R.string.label_reviewsListWIP), true);
+    	
+    	/*
+    	 * Add In Progress items
+    	 */
+    	adapter.addItem(-1, context.getResources().getString(R.string.label_reviewsListWIP), true, false);
     	revs = revsTable.getAllItemsByState(Common.revStates.WORK_IN_PROGRESS);
-    	if(revs.size() > 0) addItemsToAdapter(revs);
+    	if(revs.size() > 0) addItemsToAdapter(revs, false);
     	else Common.log(3, TAG, "updateView: no WIP reviews found");
     	
-    	adapter.addItem(-1, context.getResources().getString(R.string.label_reviewsListCompleted), true);
+    	/*
+    	 * Add Completed items
+    	 */
+    	adapter.addItem(-1, context.getResources().getString(R.string.label_reviewsListCompleted), true, false);
     	revs = revsTable.getAllItemsByState(Common.revStates.COMPLETED);
-    	if(revs.size() > 0) addItemsToAdapter(revs);
+    	if(revs.size() > 0) addItemsToAdapter(revs, true);
     	else Common.log(3, TAG, "updateView: no COMPLETED reviews found");
       
     	adapter.notifyDataSetChanged();
     	Common.log(5, TAG, "updateView: will exit");
     }
 	
-	private void addItemsToAdapter(List<Review> revs) {
+	private void addItemsToAdapter(List<Review> revs, boolean isReadOnly) {
     	Common.log(5, TAG, "addItemsToAdapter: started ('" + revs.size() + "' reviews will be processed)");
         for(Review item : revs) {
         	//Common.log(5, TAG, "updateAdapters: will attempt to get Article with Id '" + item.getArticleId() + "'");
         	Article artTmp = artsTable.getItem(item.getArticleId());
-        	adapter.addItem(item.getId(), artTmp.getName(), false);
+        	adapter.addItem(item.getId(), artTmp.getName(), false, isReadOnly);
         }
         Common.log(5, TAG, "addItemsToAdapter: finished");
 	}
 	
-	private void launchReview(long id) {
+	private void launchReview(long id, boolean isReadOnly) {
     	Intent intent = new Intent(this, ReviewActivity.class);
     	intent.putExtra("revId", id);
+    	intent.putExtra("isReviewReadOnly", isReadOnly);
     	startActivity(intent);
 	}
 }

@@ -1,6 +1,5 @@
 package pt.continente.review;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,14 +24,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.Menu;
@@ -40,8 +40,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -51,31 +51,36 @@ import com.bugsense.trace.BugSenseHandler;
 public class ReviewActivity extends Activity {
 	private static final String TAG = "CntRev - ReviewActivity";
 
-	private static ImageView imageView;
-	private Context context = this;
+	private static TextView articleNameTextView;
+	private static Context context;
+	private static Resources resources;
 
 	private static long revId;
-	public Article article = null;
-	public Review review = null;
-	private List<Dimension> dimensions = null;
-	public List<ReviewDimension> reviewDimensions = null;
+	public static Article article = null;
+	public static Review review = null;
+	private static List<Dimension> dimensions = null;
+	public static List<ReviewDimension> reviewDimensions = null;
 
-	private ProgressDialog dialog;
+	private static ProgressDialog dialog;
+	private static boolean isReviewReadOnly;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		BugSenseHandler.initAndStartSession(this, "6804ac88");
 		Common.log(5, TAG, "onCreate: started");
+		BugSenseHandler.initAndStartSession(this, Common.bugSenseAppKey);
 		setContentView(R.layout.activity_review);
+		
+		context = this;
+		resources = getResources();
 
-		imageView = (ImageView) findViewById(R.id.articleIcon);
+		articleNameTextView = (TextView) findViewById(R.id.articleName);
 
 		/*
 		 * Attempts to get either an Id of an existing review or the object of
 		 * the article already retrieved for a new review
 		 */
-		revId = (long) getIntent().getLongExtra("revId", -1);
+		revId = getIntent().getLongExtra("revId", -1);
 		article = (Article) getIntent().getSerializableExtra("Article");
 		if (article != null) {
 			Bitmap artImg = (Bitmap) getIntent().getParcelableExtra("ArticleImage");
@@ -83,6 +88,12 @@ public class ReviewActivity extends Activity {
 				Common.log(5, TAG, "onCreate: imagem obtida é nula");
 			article.setImage(artImg);
 		}
+		
+		/*
+		 * Checks wether or not this review is to be presented as read only
+		 */
+		isReviewReadOnly = getIntent().getBooleanExtra("isReviewReadOnly", false);
+		
 		Common.log(5, TAG, "onCreate: finished");
 	}
 
@@ -116,10 +127,25 @@ public class ReviewActivity extends Activity {
 		 */
 		if (revId == -1 && article == null) {
 			finish();
-			Common.longToast(this, "Error retrieving the Article; cannot continue");
+			Common.longToast(this, resources.getString(R.string.toast_generalUndefinedError) + "\n(" + resources.getString(R.string.toast_reviewNoValidInput) + ")");
 			return;
 		}
-
+		
+		/*
+		 * If review is to be presented as read-only,
+		 * HIDE SUBMIT BUTTON
+		 */
+		if(isReviewReadOnly) {
+			Button butSubmit = (Button) findViewById(R.id.buttonSubmitReview);
+			butSubmit.setVisibility(Button.GONE);
+		}
+		
+		
+		/*
+		 * If the input to the activity was not a previous review and an article
+		 * has been received,
+		 * CHECK IF A PENDING REVIEW EXISTS FOR THIS ARTICLE
+		 */
 		if (revId == -1 && article != null) {
 			Common.log(5, TAG, "onResume: will check if received article already has a pending review");
 
@@ -129,7 +155,7 @@ public class ReviewActivity extends Activity {
 				revTab = new ReviewsTable(dbHelper);
 				revTab.open();
 			} catch (Exception e) {
-				shutdownWithError("onResume: ERROR could not open the table - " + e.getMessage(), "Error accessing local tables; cannot continue");
+				shutdownWithError("onResume: ERROR could not open the table - " + e.getMessage(), resources.getString(R.string.toast_generalUndefinedError) + "\n(" + resources.getString(R.string.toast_reviewErrorAccessingTables) + ")");
 				return;
 			}
 			long revIdTmp = revTab.findItemFromActive(article.getId());
@@ -139,28 +165,33 @@ public class ReviewActivity extends Activity {
 			revTab.close();
 		}
 
+		/*
+		 * If there is a pending review to show (from input or pending for
+		 * the selected article
+		 * SHOW EXISTING REVIEW
+		 */
 		if (revId != -1) {
 			Common.log(5, TAG, "onResume: will recover existing review with Id '" + revId + "'");
 			int result = getDataFromExistingReview();
 			if (result < 0) {
-				shutdownWithError("onResume: ERROR getting information from DB; cannot continue (revId = '" + revId + "', result = '" + result + "'", "Error getting information from DB; cannot continue");
+				shutdownWithError("onResume: ERROR getting information from DB; cannot continue (revId = '" + revId + "', result = '" + result + "'", resources.getString(R.string.toast_generalUndefinedError) + "\n(" + resources.getString(R.string.toast_reviewErrorAccessingTables) + ")");
 				return;
 			} else {
 				showReview();
 			}
-
+			
+		/*
+		 * Else, if there is no pending review for this article,
+		 * CREATE A NEW REVIEW FOR THE ARTICLE (request data from server
+		 * and build review when server answers) 
+		 */
 		} else if (article != null) {
 			Common.log(5, TAG, "onResume: review for received article not present, will create new");
 
 			String url = Common.httpVariables.DIMENSIONS_PREFIX + article.getId();
 			Common.log(5, TAG, "onResume: will atempt to launch service to get content from url '" + url + "'");
-			//TODO Tiago:Quando lançar isto tenho que ter neste objecto tudo o que é para fazer submit
-			//Article id:OK
-			//Comentário:?
-			//Fotos:?
-			//Dimensões com o score preenchido:?
-			(new HTTPRequest(this, new httpRequestHandler(this), url, HTTPRequest.requestTypes.GET_DIMENSIONS)).start();
-			dialog = ProgressDialog.show(this, "A obter informação", "a consultar...");
+			(new HTTPRequest(this, new httpRequestHandler(), url, HTTPRequest.requestTypes.GET_DIMENSIONS)).start();
+			dialog = ProgressDialog.show(this, resources.getString(R.string.dialog_generalFetchingInformation), resources.getString(R.string.dialog_generalFetchingInformation) + "...");
 		}
 
 		Common.log(5, TAG, "onResume: finished");
@@ -172,23 +203,23 @@ public class ReviewActivity extends Activity {
 		reviewSave();
 	}
 
-	private void showReview() {
+	private static void showReview() {
 		Common.log(5, TAG, "showReview: started");
 
 		if (review == null || article == null || dimensions == null || dimensions.isEmpty() || reviewDimensions == null || reviewDimensions.isEmpty()) {
-			shutdownWithError("showReview: ERROR no valid source to update view; cannot continue", "Error getting data to present; cannot continue");
+			shutdownWithError("showReview: ERROR no valid source to update view; cannot continue", resources.getString(R.string.toast_generalUndefinedError) + "\n(" + resources.getString(R.string.toast_reviewMissingInformation) + ")");
 			return;
 		}
 
-		TextView t = (TextView) findViewById(R.id.articleName);
+		TextView t = (TextView) ((Activity) context).findViewById(R.id.articleName);
 		t.setText(article.getName());
 
 		Common.log(5, TAG, "showReview: will set bitmap");
-		Bitmap productBitmap = article.getImage();
-		if (productBitmap == null) {
+		Bitmap articleBitmap = article.getImage();
+		if (articleBitmap == null) {
 			Common.log(1, TAG, "showReview: ERROR article object did not contain image; will attempt to get from URL");
 		} else {
-			imageView.setImageBitmap(productBitmap);
+			articleNameTextView.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(resources, articleBitmap), null, null, null);
 		}
 
 		Common.log(5, TAG, "showReview: will draw dimensions");
@@ -196,10 +227,10 @@ public class ReviewActivity extends Activity {
 			drawDimensions();
 	}
 
-	private void shutdownWithError(String debugText, String userText) {
+	private static void shutdownWithError(String debugText, String userText) {
 		Common.log(1, TAG, debugText);
-		finish();
-		Common.longToast(this, userText);
+		((Activity) context).finish();
+		Common.longToast(context, userText);
 	}
 
 	/**
@@ -309,15 +340,15 @@ public class ReviewActivity extends Activity {
 			return 0;
 	}
 
-	private boolean addNewReview() {
+	private static boolean addNewReview() {
 		Common.log(5, TAG, "addNewReview: started");
 
 		SQLiteDatabase database;
-		SQLiteHelper dbHelper = new SQLiteHelper(this);
+		SQLiteHelper dbHelper = new SQLiteHelper(context);
 		try {
 			database = dbHelper.getWritableDatabase();
 		} catch (SQLiteException e) {
-			Log.i(TAG, "addNewReview: error getting writable database - " + e.getMessage());
+			Common.log(1, TAG, "addNewReview: error getting writable database - " + e.getMessage());
 			return false;
 		}
 
@@ -458,16 +489,16 @@ public class ReviewActivity extends Activity {
 		return true;
 	}
 
-	private void drawDimensions() {
+	private static void drawDimensions() {
 		if (dimensions.size() <= 0) {
 			Common.log(3, TAG, "addDimensions: skiped entire method since there are no dimensions");
 			return;
 		}
 
-		LinearLayout linLay = (LinearLayout) this.findViewById(R.id.mainLinLay);
+		LinearLayout linLay = (LinearLayout) ((Activity) context).findViewById(R.id.mainLinLay);
 
 		LinearLayout.LayoutParams linLayParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-		linLayParams.bottomMargin = Common.pixelsFromDPs(this, 40);
+		linLayParams.bottomMargin = Common.pixelsFromDPs(context, 40);
 
 		LinearLayout.LayoutParams dimTxtParams = new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
 
@@ -481,23 +512,33 @@ public class ReviewActivity extends Activity {
 
 		SeekBar testSeekExistence;
 		for (Dimension dim : dimensions) {
-			testSeekExistence = (SeekBar) findViewById((int) dim.getId());
+			testSeekExistence = (SeekBar) ((Activity) context).findViewById((int) dim.getId());
 			if (testSeekExistence != null)
 				continue;
 
-			LinearLayout newLinLay = new LinearLayout(this);
+			LinearLayout newLinLay = new LinearLayout(context);
 			newLinLay.setOrientation(LinearLayout.VERTICAL);
 			newLinLay.setLayoutParams(linLayParams);
 
-			TextView newLabel = new TextView(this);
+			TextView newLabel = new TextView(context);
 			newLabel.setText(dim.getLabel());
 			newLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
 			newLabel.setTypeface(null, Typeface.BOLD);
 
-			SeekBar newBar = new SeekBar(this);
+			SeekBar newBar = new SeekBar(context);
 			newBar.setId((int) dim.getId());
 			newBar.setMax(100);
-			newBar.setOnSeekBarChangeListener(new seekBarChangeListener());
+			
+			/*
+			 * In read only, MAKE SEEKBAR NOT EDITABLE
+			 * else, ADD onChangeListener
+			 */
+			if(isReviewReadOnly) {
+				newBar.setEnabled(false);
+			} else {
+				newBar.setOnSeekBarChangeListener(((ReviewActivity) context).new seekBarChangeListener());
+			}
+
 
 			if (revDimValues.containsKey(dim.getId())) {
 				int value = revDimValues.get(dim.getId());
@@ -506,16 +547,16 @@ public class ReviewActivity extends Activity {
 				}
 			}
 
-			LinearLayout newLinLayClass = new LinearLayout(this);
+			LinearLayout newLinLayClass = new LinearLayout(context);
 			newLinLayClass.setOrientation(LinearLayout.HORIZONTAL);
 
-			TextView newMin = new TextView(this);
+			TextView newMin = new TextView(context);
 			newMin.setText(dim.getMin());
 			newMin.setGravity(Gravity.LEFT);
 			newMin.setLayoutParams(dimTxtParams);
 			newLinLayClass.addView(newMin);
 
-			TextView newMed = new TextView(this);
+			TextView newMed = new TextView(context);
 			if (dim.getMed() != null && dim.getMed() != "")
 				newMed.setText(dim.getMed());
 			else
@@ -524,7 +565,7 @@ public class ReviewActivity extends Activity {
 			newMed.setLayoutParams(dimTxtParams);
 			newLinLayClass.addView(newMed);
 
-			TextView newMax = new TextView(this);
+			TextView newMax = new TextView(context);
 			newMax.setText(dim.getMax());
 			newMax.setGravity(Gravity.RIGHT);
 			newMax.setLayoutParams(dimTxtParams);
@@ -540,6 +581,13 @@ public class ReviewActivity extends Activity {
 
 	private class seekBarChangeListener implements SeekBar.OnSeekBarChangeListener {
 		public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+			/*
+			 * In read only this method should not be reached but, if it is,
+			 * EXIT METHOD
+			 */
+			if(isReviewReadOnly)
+				return;
+
 			int changedBar = seekBar.getId();
 			for (ReviewDimension revDim : reviewDimensions) {
 				if (revDim.getDimId() == changedBar) {
@@ -557,6 +605,13 @@ public class ReviewActivity extends Activity {
 
 	private void reviewSave() {
 		Common.log(5, TAG, "reviewSave: started");
+
+		/*
+		 * In read only this method should not be reached but, if it is,
+		 * EXIT METHOD
+		 */
+		if(isReviewReadOnly)
+			return;
 
 		if (review == null || reviewDimensions == null || reviewDimensions.isEmpty()) {
 			Common.log(5, TAG, "reviewSave: not enough data available to save the review");
@@ -623,6 +678,14 @@ public class ReviewActivity extends Activity {
 	 * @param view
 	 */
 	public void reviewSubmit(View view) {
+		
+		/*
+		 * In read only this method should not be reached but, if it is,
+		 * EXIT METHOD
+		 */
+		if(isReviewReadOnly)
+			return;
+		
 		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		String userName = sharedPref.getString("userName", null);
 		String userEmail = sharedPref.getString("userEmail", null);
@@ -630,14 +693,14 @@ public class ReviewActivity extends Activity {
 		if(userName == null || userName.equals("") || userEmail == null || userEmail.equals("")) {
 			//Common.longToast(this, "Cannot submit, user name/email not defined");
 			AlertDialog.Builder alertUserData = new AlertDialog.Builder(this);
-			alertUserData.setTitle("Submeter Review");
-			alertUserData.setMessage("Não pode submeter a sua opinião sem preencher os dados pessoais.\nPretende preencher agora?");
-			alertUserData.setPositiveButton("Sim", new DialogInterface.OnClickListener() {
+			alertUserData.setTitle(resources.getString(R.string.dialog_reviewSubmitTitle));
+			alertUserData.setMessage(resources.getString(R.string.dialog_reviewSubmitUserInfoError));
+			alertUserData.setPositiveButton(resources.getString(R.string.button_generalContinue), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int whichButton) {
 		    		startActivity(new Intent(context, Preferences.class));
 				}
 			});
-			alertUserData.setNegativeButton("Voltar", new DialogInterface.OnClickListener() {
+			alertUserData.setNegativeButton(resources.getString(R.string.button_generalReturn), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int whichButton) {
 					return;
 				}
@@ -647,23 +710,22 @@ public class ReviewActivity extends Activity {
 		}
 		
 		AlertDialog.Builder alert = new AlertDialog.Builder(this);
-		alert.setTitle("Submeter Review");
-		alert.setMessage("Tem a certeza que pretende submeter este Review?");
-		alert.setPositiveButton("Submeter", new DialogInterface.OnClickListener() {
+		alert.setTitle(resources.getString(R.string.dialog_reviewSubmitTitle));
+		alert.setMessage(resources.getString(R.string.dialog_reviewSubmitConfirmationMessage));
+		alert.setPositiveButton(resources.getString(R.string.button_generalContinue), new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
 				review.setState(Common.revStates.COMPLETED);
 				reviewSave();
 				
 				String url = Common.httpVariables.REVIEW_PREFIX;
-				(new HTTPRequest(context, new httpRequestHandler((ReviewActivity) context), url, HTTPRequest.requestTypes.SUBMIT_REVIEW)).start();
-				Common.longToast(context, "O review foi submetido com sucesso. Obrigado!");
+				(new HTTPRequest(context, new httpRequestHandler(), url, HTTPRequest.requestTypes.SUBMIT_REVIEW)).start();
+				Common.longToast(context, resources.getString(R.string.toast_reviewSubmitSuccess));
 				
-				//
 				finish();
 			}
 		});
 
-		alert.setNegativeButton("Voltar", new DialogInterface.OnClickListener() {
+		alert.setNegativeButton(resources.getString(R.string.button_generalReturn), new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
 				// Canceled.
 			}
@@ -674,6 +736,8 @@ public class ReviewActivity extends Activity {
 	public void reviewPhotos(View view) {
 		Intent intent = new Intent(this, PhotosManagementActivity.class);
 		intent.putExtra("revId", review.getId());
+		// Send state of read only to also implement in next activity
+		intent.putExtra("isReviewReadOnly", isReviewReadOnly);
 		startActivity(intent);
 	}
 
@@ -693,17 +757,30 @@ public class ReviewActivity extends Activity {
 			input.setText(review.getComment());
 		alert.setView(input);
 
-		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int whichButton) {
-				String value = input.getText().toString();
-				Common.log(5, TAG, "reviewComment: capturou o input '" + value + "'");
-				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-				imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY,0);
-				review.setComment(value);
-			}
-		});
+		/*
+		 * If review is to be presented as read-only,
+		 * DO NOT ALLOW COMMENT TO BE EDITED
+		 * else
+		 * CREATE SAVE BUTTON
+		 */
+		if(isReviewReadOnly) {
+			input.setEnabled(false);
+		} else {
+			alert.setPositiveButton(getResources().getString(R.string.button_generalSave), new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int whichButton) {
+					String value = input.getText().toString();
+					Common.log(5, TAG, "reviewComment: capturou o input '" + value + "'");
+					InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+					imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY,0);
+					review.setComment(value);
+				}
+			});
 
-		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+			imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+		}
+
+		alert.setNegativeButton(getResources().getString(R.string.button_generalReturn), new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
 				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 				imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY,0);
@@ -711,72 +788,59 @@ public class ReviewActivity extends Activity {
 			}
 		});
 
-		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-		imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
-
 		alert.show();
 		Common.log(5, TAG, "reviewComment: will exit");
 	}
 
 	static class httpRequestHandler extends Handler {
-		WeakReference<ReviewActivity> outerClass;
-
-		httpRequestHandler(ReviewActivity outerClass) {
-			this.outerClass = new WeakReference<ReviewActivity>(outerClass);
-		}
-
 		@SuppressWarnings("unchecked")
 		@Override
 		public void handleMessage(android.os.Message msg) {
 			Common.log(5, TAG, "httpRequestHandler: Comecei a tratar as dimensoes que recebi");
-			ReviewActivity outerClassLocalObj = outerClass.get();
 			String errorMsg = null;
 			List<Dimension> newDims = null;
 
 			switch (msg.what) {
 			case HTTPRequest.responseOutputs.SUCCESS:
 				newDims = (List<Dimension>) msg.obj;
-				
 				Iterator<Dimension> itr = newDims.iterator();
 				while (itr.hasNext())
-				{
 					Common.log(5, TAG, "httpRequestHandler: Dimensão recebida no ReviewActivity:" + ((Dimension) itr.next()).getLabel());
-				}
 				break;
 			case HTTPRequest.responseOutputs.FAILED_NO_NETWORK_CONNECTION_DETECTED:
-				errorMsg = "No network connection was detected; cannot continue";
+				errorMsg = resources.getString(R.string.toast_generalNoConnection) + "\n" + resources.getString(R.string.toast_generalCannotContinue);
 				break;
 			case HTTPRequest.responseOutputs.FAILED_ERROR_ON_SUPPLIED_URL:
-				errorMsg = "Supplied value was not valid";
+				errorMsg = resources.getString(R.string.toast_generalErrorSearchingArticle) + "\n(" + resources.getString(R.string.toast_errorInvalidURL) + ")";
 				break;
 			case HTTPRequest.responseOutputs.FAILED_QUERY_FROM_INTERNET:
-				errorMsg = "No answer from internet (connection or server down)";
+				errorMsg = resources.getString(R.string.toast_generalErrorSearchingArticle) + "\n(" + resources.getString(R.string.toast_errorNoAnswerToWebRequest) + ")";
 				break;
 			case HTTPRequest.responseOutputs.FAILED_GETTING_VALID_RESPONSE_FROM_QUERY:
-				errorMsg = "Query return was empty";
+				errorMsg = resources.getString(R.string.toast_generalErrorSearchingArticle) + "\n(" + resources.getString(R.string.toast_errorEmptyAnswerFromWebRequest) + ")";
 				break;
 			case HTTPRequest.responseOutputs.FAILED_PROCESSING_RETURNED_OBJECT:
-				errorMsg = "Query was invalid (not compatible with expected result)";
+				errorMsg = resources.getString(R.string.toast_generalErrorSearchingArticle) + "\n(" + resources.getString(R.string.toast_errorIncompatibleObject) + ")";
 				break;
 			case HTTPRequest.responseOutputs.FAILED_OBJECT_NOT_FOUND:
 				String serverErrorMsg = msg.getData().getString("errorMessage");
-				errorMsg = "Could not find dimensions for this article (" + serverErrorMsg + ")";
+				errorMsg = resources.getString(R.string.toast_generalErrorSearchingArticle) + "\n(" + serverErrorMsg + ")";
 				break;
 			default:
-				errorMsg = "Undefined error when retrieving data from the internet";
+				errorMsg = resources.getString(R.string.toast_generalUndefinedError) + "\n(" + resources.getString(R.string.toast_errorUndefinedErrorFromWebReques) + ")";
 				break;
 			}
 
-			if (outerClassLocalObj.dialog != null && outerClassLocalObj.dialog.isShowing())
-				outerClassLocalObj.dialog.dismiss();
+			if (dialog != null && dialog.isShowing())
+				dialog.dismiss();
 
 			if (msg.what != HTTPRequest.responseOutputs.SUCCESS) {
-				outerClassLocalObj.shutdownWithError("httpRequestHandler: ERROR - " + errorMsg, "Error obtaining information for Article review; cannot continue");
+				shutdownWithError("httpRequestHandler: ERROR - " + errorMsg, "Error obtaining information for Article review; cannot continue");
 			} else if (newDims == null) {
-				outerClassLocalObj.shutdownWithError("httpRequestHandler: ERROR - received dimensions where null", "Error obtaining information for Article review; cannot continue");
+				shutdownWithError("httpRequestHandler: ERROR - received dimensions where null", "Error obtaining information for Article review; cannot continue");
 			} else {
-				outerClassLocalObj.dimensions = newDims;
-				outerClassLocalObj.addNewReview();
+				dimensions = newDims;
+				addNewReview();
 			}
 		}
 	}

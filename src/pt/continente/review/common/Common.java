@@ -17,6 +17,16 @@ public class Common {
 	//private static final String TAG = "CntRev - Common";
 	private static final int LOG_LEVEL = 7;
 	
+	
+	/*
+	 * CONFIGURATION VARIABLES
+	 */
+	private static final String appFeedbackEmailAddress = "Continente Review <continentereview@continente.pt>";
+	private static final String appFeedbackSubject = "Opinião sobre app Android Continente Review";
+	private static final String appFeedbackBodyText = "O que gostei:\n\n\n\n\nO que podia estar melhor:\n\n\n";
+	public static final String bugSenseAppKey = "6804ac88";
+	// END OF CONFIGURATION
+	
 	public static final class revStates {
 		public static final int PENDING_USER = 1;
 		public static final int PENDING_SYSTEM = 2;
@@ -95,9 +105,9 @@ public class Common {
 
 		/* Fill it with Data */
 		emailIntent.setType("plain/text");
-		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"Continente Review <continentereview@continente.pt>"});
-		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Opinião sobre app Android Continente Review");
-		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "O que gostei:\n\n\n\n\nO que podia estar melhor:\n\n\n");
+		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{appFeedbackEmailAddress});
+		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, appFeedbackSubject);
+		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, appFeedbackBodyText);
 
 		/* Send it off to the Activity-Chooser */
 		c.startActivity(Intent.createChooser(emailIntent, "Enviar email..."));

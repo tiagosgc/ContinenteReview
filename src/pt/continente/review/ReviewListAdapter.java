@@ -19,6 +19,7 @@ public class ReviewListAdapter extends BaseAdapter {
     private ArrayList<Long> revIds;
     private ArrayList<String> revArtNames;
     private ArrayList<Boolean> areTitles;
+    private ArrayList<Boolean> areReadOnly;
 
 	public ReviewListAdapter(Context c) {
     	Common.log(5, TAG, "ReviewListAdapter: started");
@@ -26,9 +27,10 @@ public class ReviewListAdapter extends BaseAdapter {
         revIds = new ArrayList<Long>();
         revArtNames = new ArrayList<String>();
         areTitles = new ArrayList<Boolean>();
+        areReadOnly = new ArrayList<Boolean>();
 	}
 
-	public boolean addItem(long revId, String revArtName, Boolean isTitle) {
+	public boolean addItem(long revId, String revArtName, boolean isTitle, boolean isReadOnly) {
 		if(revId != -1 && revArtName != null && !isTitle) {
 			if(revIds.contains(revId)) {
 		    	Common.log(1, TAG, "addItem: did not create as it would duplicate item with Id '" + revId + "'");
@@ -37,6 +39,7 @@ public class ReviewListAdapter extends BaseAdapter {
 				revIds.add(revId);
 				revArtNames.add(revArtName);
 				areTitles.add(false);
+				areReadOnly.add(isReadOnly);
 		    	Common.log(5, TAG, "addItem: successfuly added new element with Id '" + revId + "'");
 				return true;
 			}
@@ -44,6 +47,7 @@ public class ReviewListAdapter extends BaseAdapter {
 			revIds.add(-1L);
 			revArtNames.add(revArtName);
 			areTitles.add(isTitle);
+			areReadOnly.add(isReadOnly);
 			return true;
 		}
     	Common.log(1, TAG, "addItem: did not create as at least one of the inputs has wrong value");
@@ -54,6 +58,7 @@ public class ReviewListAdapter extends BaseAdapter {
 		revIds.clear();
 		revArtNames.clear();
 		areTitles.clear();
+		areReadOnly.clear();
 	}
 
 	public boolean deleteItem(long revId) {
@@ -62,6 +67,8 @@ public class ReviewListAdapter extends BaseAdapter {
 		if(positionToDelete != -1) {
 			revIds.remove(positionToDelete);
 			revArtNames.remove(positionToDelete);
+			areTitles.remove(positionToDelete);
+			areReadOnly.remove(positionToDelete);
 	    	Common.log(5, TAG, "deleteItem: deleted record with Id '" + revIds + "' at position '" + positionToDelete + "'");
 	    	return true;
 	    } else {
@@ -77,9 +84,13 @@ public class ReviewListAdapter extends BaseAdapter {
 
 	@Override
 	public Object getItem(int position) {
-		return revArtNames.get(position);
+		return null;
 	}
 
+	public boolean isReadOnly(int position) {
+		return areReadOnly.get(position);
+	}
+	
 	@Override
 	public long getItemId(int position) {
 		return revIds.get(position);

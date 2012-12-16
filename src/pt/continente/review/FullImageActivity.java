@@ -6,22 +6,27 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import com.bugsense.trace.BugSenseHandler;
- 
+import pt.continente.review.common.Common;
+
 public class FullImageActivity extends Activity {
 	
 	private long imgId;
+	private boolean isReviewReadOnly;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		BugSenseHandler.initAndStartSession(this, "6804ac88");
+		BugSenseHandler.initAndStartSession(this, Common.bugSenseAppKey);
 		setContentView(R.layout.activity_full_image);
 		
 		// get intent data
 		Intent i = getIntent();
+		
+		isReviewReadOnly = i.getBooleanExtra("isReviewReadOnly", false);
 		
 		// Selected image id
 		Bitmap image = i.getExtras().getParcelable("img");
@@ -41,6 +46,14 @@ public class FullImageActivity extends Activity {
 		}
 	}
 	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if(isReviewReadOnly) {
+			((Button) findViewById(R.id.buttonPhotoDelete)).setVisibility(Button.GONE);
+		}
+	}
+
 	public void apagar(View view) {
 		voltarAtividadeAnterior(RESULT_CANCELED);
 	}
@@ -57,6 +70,7 @@ public class FullImageActivity extends Activity {
 	private void voltarAtividadeAnterior(int resultado) {
 		Intent returnIntent = new Intent();
 		returnIntent.putExtra("imgId", imgId);
+		returnIntent.putExtra("isReviewReadOnly", isReviewReadOnly);
 		setResult(resultado, returnIntent);        
 		finish();
 	}

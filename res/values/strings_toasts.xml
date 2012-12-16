@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="toast_generalNotYetImplemented">Não implementado</string>
+    <string name="toast_generalNoConnection">Ligação à internet não disponível</string>
+    <string name="toast_generalCannotContinue">Não é possível continuar</string>
+    <string name="toast_generalErrorSearchingArticle">Erro ao pesquisar o artigo</string>
+    <string name="toast_generalUndefinedError">Erro indefinido</string><string name="toast_generalSuccess">Terminado com sucesso</string><string name="toast_errorInvalidURL">URL contém argumentos inválidos</string>
+    <string name="toast_errorNoAnswerToWebRequest">pedido sem resposta; ligação ou servidor indisponíveis</string>
+    <string name="toast_errorEmptyAnswerFromWebRequest">erro inesperado; resposta do servidor vazia</string>
+    <string name="toast_errorIncompatibleObject">resposta inesperada do servidor</string>
+    
+    
+    <string name="toast_errorUndefinedErrorFromWebReques">erro ao obter resposta à pesquisa na internet</string>
+    <string name="toast_articleErrorRetrieving">Erro ao pesquisar o artigo</string>
+    <string name="toast_imageErrorFetching">Imagem não encontrada</string>
+    <string name="toast_reviewNoValidInput">não encontrada review pendente ou novo artigo</string>
+    <string name="toast_reviewErrorAccessingTables">erro ao aceder às tabelas locais da aplicação</string>
+    <string name="toast_reviewMissingInformation">alguns dados em falta</string>
+    <string name="toast_reviewSubmitSuccess">O review foi submetido com sucesso.\nObrigado!</string>
     
 </resources>

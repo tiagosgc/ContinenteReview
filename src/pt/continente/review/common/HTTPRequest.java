@@ -332,6 +332,7 @@ public class HTTPRequest extends Thread {
 	 * n fotos
 	 * n dimensoes, com score
 	 */
+	@SuppressWarnings("static-access")
 	public void submitReview() { //throws Exception { // Review review, Article article, Bitmap bitmap)
 		ReviewActivity reviewActivity = (ReviewActivity) context;
 		Article article = reviewActivity.article;

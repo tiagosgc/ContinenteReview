@@ -5,9 +5,9 @@
     android:background="@color/white"
     android:orientation="vertical"
     android:padding="@dimen/paddingGeneral" >
-
+
     <Button
-        android:id="@+id/button1"
+        android:id="@+id/buttonAddNewPhoto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="adicionaNova"
