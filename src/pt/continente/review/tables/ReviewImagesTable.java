@@ -111,6 +111,8 @@ public class ReviewImagesTable {
 		
 	    ContentValues values = new ContentValues();
 	    
+	    Common.log(5, TAG, "addItem: image size before blob: " + item.getImage().getHeight() + " x " + item.getImage().getWidth() + " @ " + item.getImage().getDensity() + "dpi");
+	    
 	    values.put(COLUMN_REVIEW_ID, item.getRevId());
 	    values.put(COLUMN_REVIEW_IMAGE, Common.imageToBlob(item.getImage()));
 	    

@@ -3,9 +3,9 @@ package pt.continente.review.common;
 import android.graphics.Bitmap;
 
 public class ReviewImage {
-	public long imgId = -1;
-	public long revId = -1;
-	public Bitmap revImg = null;
+	private long imgId = -1;
+	private long revId = -1;
+	private Bitmap revImg = null;
 	
 	public ReviewImage(long imgId, long revId, Bitmap revImg) {
 		setId(imgId);

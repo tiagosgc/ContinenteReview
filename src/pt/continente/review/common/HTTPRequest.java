@@ -110,7 +110,7 @@ public class HTTPRequest extends Thread {
 			parentHandler.sendMessage(messageToParent);
 			return;
 		}
-
+		
 		Common.log(5, TAG, "run: vai obter dados da net");
 		try {
 			response = client.execute(httpGet, localContext);
@@ -364,14 +364,14 @@ public class HTTPRequest extends Thread {
 			HttpPost httpPost = new HttpPost(Common.httpVariables.REVIEW_PREFIX);
 			MultipartEntity entity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
 //			Bitmap bmpCompressed = Bitmap.createScaledBitmap(bitmap, 640, 480, true);
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			ByteArrayOutputStream bos;
 			byte[] data;
 			int i = 0;
 			for(ReviewImage item : revImgs) {
-				Common.log(5, TAG, "Aqui está uma imagem:"+item.revImg.getHeight());
-				item.revImg.compress(CompressFormat.JPEG, 100, bos);
+				Common.log(5, TAG, "Aqui está uma imagem:" + item.getImage().getHeight());
+				bos = new ByteArrayOutputStream();
+				item.getImage().compress(CompressFormat.JPEG, 100, bos);
 				data = bos.toByteArray();
-				//Common.log(5, TAG, "Vou mandar uma foto, ó para mim a mandar fotos:"+data.length);
 				entity.addPart("review_image"+(new Random().nextLong()), new ByteArrayBody(data, "imagem"+i+".jpg"));
 				i++;
 			}

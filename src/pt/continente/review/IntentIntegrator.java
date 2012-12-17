@@ -193,7 +193,7 @@ public final class IntentIntegrator {
     downloadDialog.setMessage(stringMessage);
     downloadDialog.setPositiveButton(stringButtonYes, new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialogInterface, int i) {
-        Uri uri = Uri.parse("market://search?q=pname:barcode scanner");
+        Uri uri = Uri.parse("market://search?q=barcode scanner");
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         activity.startActivity(intent);
       }
